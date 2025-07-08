@@ -2,7 +2,7 @@ import "./App.css";
 import SidebarNavbar from "./Components/Sidebar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./Pages/UserPages/Homepage";
-import About from "./Pages/UserPages/Aboutpage";
+import About from "./Pages/AdminPages/Approval";
 
 import Login from "./Pages/Login";
 import { AuthProvider } from "./AuthContext";

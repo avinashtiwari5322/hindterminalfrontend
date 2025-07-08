@@ -17,7 +17,7 @@ import {
   Grid3x3,
 } from "lucide-react";
 import { Link } from "react-router-dom"; // Add this import
-import MyRequests from "../Pages/UserPages/Aboutpage";
+import MyRequests from "../Pages/AdminPages/Approval";
 import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
 const SidebarNavbar = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
