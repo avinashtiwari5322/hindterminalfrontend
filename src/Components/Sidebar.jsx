@@ -28,11 +28,7 @@ const SidebarNavbar = ({ children }) => {
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/" },
     { icon: BarChart3, label: "Analytics", href: "/about", badge: "23" },
-    { icon: Users, label: "Team", href: "/team" },
-    { icon: FileText, label: "Documents", href: "/documents", badge: "5" },
-    { icon: Calendar, label: "Calendar", href: "/calendar" },
-    { icon: Mail, label: "Messages", href: "/messages", badge: "12" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+
   ];
 
   return (
