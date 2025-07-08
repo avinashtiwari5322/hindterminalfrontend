@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext'; // <-- import this
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -7,17 +9,20 @@ const Login = () => {
     password: '',
   });
   const [errors, setErrors] = useState({});
+  const [loginError, setLoginError] = useState('');
+  const navigate = useNavigate();
+  const { login } = useAuth(); // <-- use this
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
-    // Clear error for the field when user starts typing
     setErrors(prev => ({
       ...prev,
       [field]: '',
     }));
+    setLoginError('');
   };
 
   const validateForm = () => {
@@ -40,13 +45,12 @@ const Login = () => {
       setErrors(validationErrors);
       return;
     }
-    // Simulate login action (replace with actual API call in production)
-    console.log('Login attempt:', {
-      userId: formData.userId,
-      password: formData.password,
-    });
-    // Reset form after submission
-    setFormData({ userId: '', password: '' });
+    // Use AuthContext login
+    if (login(formData.userId, formData.password)) {
+      navigate('/');
+    } else {
+      setLoginError('Invalid credentials');
+    }
   };
 
   return (
@@ -58,11 +62,16 @@ const Login = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Login</h1>
             <p className="text-gray-600">Access your height work permit dashboard</p>
           </div>
-        
         </div>
 
         {/* Login Form */}
         <div className="space-y-6">
+          {loginError && (
+            <div className="flex items-center text-red-600 mb-2">
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              {loginError}
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4 inline mr-1" />

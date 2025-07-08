@@ -17,7 +17,8 @@ import {
   Grid3x3,
 } from "lucide-react";
 import { Link } from "react-router-dom"; // Add this import
-
+import MyRequests from "../Pages/UserPages/Aboutpage";
+import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
 const SidebarNavbar = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,13 +29,12 @@ const SidebarNavbar = ({ children }) => {
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/" },
     { icon: BarChart3, label: "Analytics", href: "/about", badge: "23" },
-
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex flex-col">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-800/95 backdrop-blur-md border-b border-slate-700/50 z-50 shadow-lg">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-800/95  border-b border-slate-700/50 z-50 shadow-lg">
         <div className="flex items-center justify-between h-full px-4">
           <div className="flex items-center space-x-4">
             {/* Hamburger Menu */}
@@ -99,7 +99,7 @@ const SidebarNavbar = ({ children }) => {
         {/* Sidebar Overlay */}
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
             onClick={toggleSidebar}
           />
         )}
@@ -208,7 +208,7 @@ const SidebarNavbar = ({ children }) => {
           className="flex-1 ml-0 transition-all duration-300 p-6"
           style={{ marginLeft: isOpen ? 0 : 0, marginTop: 0 }}
         >
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
