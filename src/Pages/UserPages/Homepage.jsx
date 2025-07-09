@@ -7,7 +7,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-
+import hindLogo from '../../Assets/hindimg.png'
 const HeightWorkPermit = () => {
   const [formData, setFormData] = useState({
     permitDate: "",
@@ -129,18 +129,34 @@ const HeightWorkPermit = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Height Work Permit
-              </h1>
-              <p className="text-gray-600">
-                Authorization for safe access, platforms, or working arrangement
-                at heights of 1.8 meters and above
-              </p>
+  <div className="flex items-start justify-between mb-6">
+    {/* Left side - Company logo/branding */}
+        <div className="flex items-center space-x-2">
+                <img src={hindLogo} alt="Hind Logo" className="h-12 w-auto object-contain" />
             </div>
-          </div>
-        </div>
+    
+    {/* Right side - Document details */}
+    <div className="text-right text-sm text-gray-600">
+      <div>Doc. No.: HTPL/OHS/23</div>
+      <div>Eff. Date: 02.01.24</div>
+      <div>Rev. No. & Date 00</div>
+    </div>
+  </div>
+  
+  {/* Center - Main title */}
+  <div className="text-center mb-6">
+    <h1 className="text-3xl font-bold text-gray-800 mb-4">
+      HEIGHT WORK PERMIT
+    </h1>
+  </div>
+  
+  {/* Description */}
+  <div className="text-center text-gray-700 leading-relaxed">
+    <p>
+      This permit authorizes the provision of safe Access, Platforms, or Working arrangement at heights of 1.8 meters and above for the execution of the job)
+    </p>
+  </div>
+</div>
 
         {/* Section 1: Work Specification */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">

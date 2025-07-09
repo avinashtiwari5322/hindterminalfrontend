@@ -16,6 +16,7 @@ import {
   Heart,
   Grid3x3,
 } from "lucide-react";
+import hindLogo from '../Assets/hindimg.png';
 import { Link } from "react-router-dom"; // Add this import
 import MyRequests from "../Pages/AdminPages/Approval";
 import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
@@ -62,18 +63,14 @@ const SidebarNavbar = ({ children }) => {
             </button>
 
             {/* Logo */}
+            {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                <Grid3x3 className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-lime-400">
-                HIND TERMINALS
-              </h1>
-            </div>
+              <img src={hindLogo} alt="Hind Logo" className="h-12 w-auto object-contain" />
+          </div>
           </div>
 
           {/* Right side of navbar */}
-          <div className="flex items-center space-x-3">
+          {/* <div className="flex items-center space-x-3">
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
@@ -91,7 +88,7 @@ const SidebarNavbar = ({ children }) => {
             <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200">
               <User className="w-5 h-5 text-white" />
             </div>
-          </div>
+          </div> */}
         </div>
       </nav>
 
