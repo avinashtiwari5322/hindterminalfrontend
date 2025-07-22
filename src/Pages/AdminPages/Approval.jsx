@@ -22,7 +22,7 @@ const MyRequests = () => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:4000/api/permits');
+        const response = await fetch('https://hinbackend.onrender.com/api/permits');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

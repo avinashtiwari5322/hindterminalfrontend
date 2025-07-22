@@ -202,7 +202,7 @@ const Home2 = () => {
       const formDataToSend = prepareFormData();
 
       const response = await axios.post(
-        "http://localhost:4000/api/permits",
+        "https://hinbackend.onrender.com/api/permits",
         formDataToSend,
         {
           headers: {
@@ -259,7 +259,7 @@ const Home2 = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:4000/api/permits/draft",
+        "https://hinbackend.onrender.com/api/permits/draft",
         data,
         {
           headers: {

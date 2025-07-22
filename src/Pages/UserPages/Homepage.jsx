@@ -318,7 +318,7 @@ const HeightWorkPermit = () => {
       
       console.log('Converted API data:', apiData); // Debug log
   
-      const response = await fetch("http://localhost:4000/api/permits", {
+      const response = await fetch("https://hinbackend.onrender.com/api/permits", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
