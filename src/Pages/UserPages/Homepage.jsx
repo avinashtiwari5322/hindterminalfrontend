@@ -6,8 +6,13 @@ import {
   FileText,
   Clock,
   AlertTriangle,
+  AlertCircle,
+  Upload,
+  X,
 } from "lucide-react";
-import hindLogo from '../../Assets/hindimg.png'
+
+import hindLogo from "../../Assets/hindimg.png";
+
 const HeightWorkPermit = () => {
   const [formData, setFormData] = useState({
     permitDate: "",
@@ -23,7 +28,43 @@ const HeightWorkPermit = () => {
     receiverChecks: {},
     issuerChecks: {},
     ppe: {},
+    files: [],
   });
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 4 * 1024 * 1024; // 4MB in bytes
+    const errors = [];
+    const validFiles = [];
+
+    files.forEach((file, index) => {
+      if (file.size > maxSize) {
+        errors.push(`File "${file.name}" exceeds 4MB limit`);
+      } else {
+        validFiles.push({
+          id: Date.now() + index,
+          file: file,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          preview: file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : null,
+        });
+      }
+    });
+
+    setUploadErrors(errors);
+    setFormData((prev) => ({
+      ...prev,
+      files: [...prev.files, ...validFiles],
+    }));
+
+    // Clear the input value to allow re-selecting the same file
+    e.target.value = "";
+  };
+  const [fileError, setFileError] = useState(""); // State for file upload errors
+  const [uploadErrors, setUploadErrors] = useState([]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -42,6 +83,150 @@ const HeightWorkPermit = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const maxSizeInBytes = 4 * 1024 * 1024; // 4MB
+    const validFiles = [];
+    let errorMessage = "";
+
+    selectedFiles.forEach((file) => {
+      if (file.size > maxSizeInBytes) {
+        errorMessage = `File "${file.name}" exceeds 4MB size limit.`;
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (errorMessage) {
+      setFileError(errorMessage);
+    } else {
+      setFileError("");
+      setFormData((prev) => ({
+        ...prev,
+        files: validFiles,
+      }));
+    }
+  };
+
+  const API_FIELD_MAPPING = {
+    // Basic form fields mapping
+    permitDate: "PermitDate",
+    permitNumber: "PermitNumber", 
+    location: "Location",
+    validUpto: "ValidUpto",
+    fireAlarmPoint: "FireAlarmPoint",
+    totalWorkers: "TotalWorkers",
+    workDescription: "WorkDescription",
+    contractorOrg: "ContractorOrg",
+    supervisorName: "SupervisorName",
+    contactNumber: "ContactNumber",
+  
+    // Receiver checks mapping
+    scaffoldChecked: "ScaffoldChecked",
+    scaffoldTagged: "ScaffoldTagged",
+    scaffoldRechecked: "ScaffoldRechecked",
+    scaffoldErected: "ScaffoldErected",
+    hangingBaskets: "HangingBaskets",
+    platformSafe: "PlatformSafe",
+    catLadders: "CatLadders",
+    edgeProtection: "EdgeProtection",
+  
+    // Issuer checks mapping
+    platforms: "Platforms",
+    safetyHarness: "SafetyHarness",
+    energyPrecautions: "EnergyPrecautions",
+    illumination: "Illumination",
+    unguardedAreas: "UnguardedAreas",
+    fallProtection: "FallProtection",
+    accessMeans: "AccessMeans",
+  
+    // PPE mapping
+    "Safety Helmet": "SafetyHelmet",
+    "Safety Jacket": "SafetyJacket",
+    "Safety Shoes": "SafetyShoes",
+    Gloves: "Gloves",
+    "Safety Goggles": "SafetyGoggles",
+    "Face Shield": "FaceShield",
+    "Dust Mask": "DustMask",
+    "Ear plug/Earmuff": "EarPlugEarmuff",
+    "Anti Slip footwear": "AntiSlipFootwear",
+    "Safety Net": "SafetyNet",
+    "Anchor Point/Lifelines": "AnchorPointLifelines",
+    "Self retracting Lifeline (SRL)": "SelfRetractingLifeline",
+    "Full body harness with lanyard or shock absorbers": "FullBodyHarness",
+  };
+  
+
+  const convertToApiFormat = (formData) => {
+    const apiData = {
+      PermitID: 1, // You might want to generate or get this dynamically
+    };
+  
+    // Convert basic form fields
+    const basicFields = [
+      'permitDate', 'permitNumber', 'location', 'validUpto', 
+      'fireAlarmPoint', 'totalWorkers', 'workDescription', 
+      'contractorOrg', 'supervisorName', 'contactNumber'
+    ];
+  
+    basicFields.forEach(field => {
+      if (formData[field] && API_FIELD_MAPPING[field]) {
+        apiData[API_FIELD_MAPPING[field]] = formData[field];
+      }
+    });
+  
+    // Convert receiver checks
+    Object.entries(formData.receiverChecks || {}).forEach(([key, value]) => {
+      const apiKey = API_FIELD_MAPPING[key];
+      if (apiKey) {
+        apiData[apiKey] =
+          value === "done" ? true : value === "not-required" ? false : null;
+      }
+    });
+  
+    // Convert issuer checks
+    Object.entries(formData.issuerChecks || {}).forEach(([key, value]) => {
+      const apiKey = API_FIELD_MAPPING[key];
+      if (apiKey) {
+        apiData[apiKey] =
+          value === "done" ? true : value === "not-required" ? false : null;
+      }
+    });
+  
+    // Convert PPE
+    Object.entries(formData.ppe || {}).forEach(([key, value]) => {
+      const apiKey = API_FIELD_MAPPING[key];
+      if (apiKey) {
+        apiData[apiKey] = value === true ? true : value === false ? false : null;
+      }
+    });
+  
+    // Add file information (taking first file if multiple)
+    if (formData.files && formData.files.length > 0) {
+      const firstFile = formData.files[0];
+      apiData.FileName = firstFile.name;
+      apiData.FileSize = firstFile.size;
+      apiData.FileType = firstFile.type;
+      // If you need to send the actual file data, you might need to handle it differently
+      // depending on your backend requirements (FormData, base64, etc.)
+    }
+  
+    return apiData;
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+  const removeFile = (fileId) => {
+    setFormData((prev) => ({
+      ...prev,
+      files: prev.files.filter((f) => f.id !== fileId),
+    }));
+  };
   const receiverCheckItems = [
     {
       id: "scaffoldChecked",
@@ -124,39 +309,71 @@ const HeightWorkPermit = () => {
     "Full body harness with lanyard or shock absorbers",
   ];
 
+  // Add this function to handle form submission
+  const handleSubmit = async () => {
+    try {
+      console.log('Original form data:', formData); // Debug log
+      
+      const apiData = convertToApiFormat(formData);
+      
+      console.log('Converted API data:', apiData); // Debug log
+  
+      const response = await fetch("http://localhost:4000/api/permits", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(apiData),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        alert("Form submitted successfully!");
+        console.log("Success:", apiData);
+      } else {
+        const errorText = await response.text();
+        console.error("Server response:", errorText);
+        throw new Error(`Failed to submit form: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(`Failed to submit form: ${error.message}`);
+    }
+  };
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-  <div className="flex items-start justify-between mb-6">
-    {/* Left side - Company logo/branding */}
-        <div className="flex items-center space-x-2">
-                <img src={hindLogo} alt="Hind Logo" className="h-12 w-auto object-contain" />
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <img
+                src={hindLogo}
+                alt="Hind Logo"
+                className="h-12 w-auto object-contain"
+              />
             </div>
-    
-    {/* Right side - Document details */}
-    <div className="text-right text-sm text-gray-600">
-      <div>Doc. No.: HTPL/OHS/23</div>
-      <div>Eff. Date: 02.01.24</div>
-      <div>Rev. No. & Date 00</div>
-    </div>
-  </div>
-  
-  {/* Center - Main title */}
-  <div className="text-center mb-6">
-    <h1 className="text-3xl font-bold text-gray-800 mb-4">
-      HEIGHT WORK PERMIT
-    </h1>
-  </div>
-  
-  {/* Description */}
-  <div className="text-center text-gray-700 leading-relaxed">
-    <p>
-      This permit authorizes the provision of safe Access, Platforms, or Working arrangement at heights of 1.8 meters and above for the execution of the job)
-    </p>
-  </div>
-</div>
+            <div className="text-right text-sm text-gray-600">
+              <div>Doc. No.: HTPL/OHS/23</div>
+              <div>Eff. Date: 02.01.24</div>
+              <div>Rev. No. & Date 00</div>
+            </div>
+          </div>
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">
+              HEIGHT WORK PERMIT
+            </h1>
+          </div>
+          <div className="text-center text-gray-700 leading-relaxed">
+            <p>
+              This permit authorizes the provision of safe Access, Platforms, or
+              Working arrangement at heights of 1.8 meters and above for the
+              execution of the job)
+            </p>
+          </div>
+        </div>
 
         {/* Section 1: Work Specification */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -318,6 +535,101 @@ const HeightWorkPermit = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-purple-600" />
+              Supporting Documents & Images
+            </h3>
+
+            <div className="space-y-4">
+              {/* Upload Area */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">
+                  Click to upload files or drag and drop
+                </p>
+                <p className="text-sm text-gray-500 mb-4">
+                  Maximum file size: 4MB per file • Supported formats: Images,
+                  PDF, DOC, DOCX, TXT
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                  accept="image/*,application/pdf,.doc,.docx,.txt"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
+                >
+                  Browse Files
+                </label>
+              </div>
+
+              {/* Upload Errors */}
+              {uploadErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                    <h4 className="text-sm font-medium text-red-800">
+                      Upload Errors
+                    </h4>
+                  </div>
+                  <ul className="mt-2 text-sm text-red-700">
+                    {uploadErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* File List */}
+              {formData.files.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Uploaded Files ({formData.files.length})
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {formData.files.map((fileObj) => (
+                      <div
+                        key={fileObj.id}
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+                      >
+                        {fileObj.preview ? (
+                          <img
+                            src={fileObj.preview}
+                            alt={fileObj.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-gray-500" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {fileObj.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(fileObj.size)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(fileObj.id)}
+                          className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -852,7 +1164,10 @@ const HeightWorkPermit = () => {
           <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
             Save Draft
           </button>
-          <button className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+          >
             Submit for Approval
           </button>
           <button className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
