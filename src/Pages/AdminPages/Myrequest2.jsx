@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Filter,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const MyRequests = () => {
+const MyRequests2 = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -232,7 +233,7 @@ const MyRequests = () => {
                       key={request.id}
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => {
-                        navigate(`/approval/${request.id}`);
+                        navigate(`/approval2/${request.id}`);
                         if (request.files && request.files.length > 0) {
                           console.log('Request files:', request.files); // Debug log
                           setSelectedFiles(request.files.map(file => {
@@ -322,7 +323,7 @@ const MyRequests = () => {
                                   onClick={e => {
                                     e.stopPropagation();
                                     // Optionally, navigate to edit page
-                                    navigate(`/approval/${request.id}/edit`);
+                                    navigate(`/approval2/${request.id}/edit`);
                                     setActionMenuId(null);
                                   }}
                                 >Edit</button>
@@ -348,7 +349,7 @@ const MyRequests = () => {
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                           onClick={e => {
                             e.stopPropagation();
-                            navigate(`/approval/${request.id}`);
+                            navigate(`/approval2/${request.id}`);
                           }}
                         >
                           View
@@ -459,4 +460,4 @@ const MyRequests = () => {
   );
 };
 
-export default MyRequests;
+export default MyRequests2;

@@ -9,10 +9,11 @@ import {
   Users,
   Loader2,
   AlertCircle,
+  Link,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const MyRequests = () => {
+const MyRequests3 = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -232,7 +233,7 @@ const MyRequests = () => {
                       key={request.id}
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => {
-                        navigate(`/approval/${request.id}`);
+                        navigate(`/approval3/${request.id}`);
                         if (request.files && request.files.length > 0) {
                           console.log('Request files:', request.files); // Debug log
                           setSelectedFiles(request.files.map(file => {
@@ -303,11 +304,7 @@ const MyRequests = () => {
                               <div className="absolute z-10 mt-2 right-0 bg-white border border-gray-200 rounded shadow-lg w-32">
                                 <button
                                   className="block w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-700"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleStatusChange(request.id, "Approved");
-                                    setActionMenuId(null);
-                                  }}
+                               
                                 >Approve</button>
                                 <button
                                   className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-700"
@@ -322,7 +319,7 @@ const MyRequests = () => {
                                   onClick={e => {
                                     e.stopPropagation();
                                     // Optionally, navigate to edit page
-                                    navigate(`/approval/${request.id}/edit`);
+                                    navigate(`/approval2/${request.id}/edit`);
                                     setActionMenuId(null);
                                   }}
                                 >Edit</button>
@@ -348,7 +345,7 @@ const MyRequests = () => {
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                           onClick={e => {
                             e.stopPropagation();
-                            navigate(`/approval/${request.id}`);
+                            navigate(`/approval2/${request.id}`);
                           }}
                         >
                           View
@@ -447,6 +444,7 @@ const MyRequests = () => {
                           <span className="text-red-500 text-xs mt-1 inline-block">No URL available</span>
                         )}
                       </div>
+                      
                     </div>
                   );
                 })}
@@ -459,4 +457,4 @@ const MyRequests = () => {
   );
 };
 
-export default MyRequests;
+export default MyRequests3;

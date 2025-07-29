@@ -8,7 +8,12 @@ export function AuthProvider({ children }) {
   );
 
   const login = (username, password) => {
-    if (username === "user" && password === "123456") {
+    const users = [
+      { username: "user", password: "123456" },
+      { username: "admin", password: "admin123" },
+    ];
+    const found = users.find(u => u.username === username && u.password === password);
+    if (found) {
       setIsAuthenticated(true);
       localStorage.setItem("isAuthenticated", "true");
       return true;

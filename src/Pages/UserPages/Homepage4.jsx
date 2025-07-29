@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Calendar,
   MapPin,
@@ -14,10 +14,8 @@ import {
 
 import hindLogo from "../../Assets/hindimg.png";
 import { toast } from 'react-toastify';
-import { useNavigate } from "react-router-dom";
 
-const HeightWorkPermit = (props) => {
-  const navigate = useNavigate()
+const HeightWorkPermit3 = (props) => {
   const { id } = useParams();
   const isAdminView = !!id;
 
@@ -67,10 +65,17 @@ const HeightWorkPermit = (props) => {
       updatedBy: ""
     },
     additionalPpe: "",
-    reason: ""
+    REASON: ""
   });
   const [uploadErrors, setUploadErrors] = useState([]);
+  
 
+  const navigate = useNavigate()
+
+  const approval = ()=>{
+    toast.success('approved')
+    navigate('/login')
+  }
   useEffect(() => {
     if (isAdminView && id) {
       fetch(`http://localhost:4000/api/permits/${id}`)
@@ -88,7 +93,7 @@ const HeightWorkPermit = (props) => {
             contractorOrg: data.Organization || "",
             supervisorName: data.SupervisorName || "",
             contactNumber: data.ContactNumber || "",
-            reason: data.REASON || "",
+            REASON: data.REASON || "",
             additionalPpe: data.ADDITIONAL_PPE || "",
             receiverChecks: {
               scaffoldChecked: data.ScaffoldChecked ? "done" : "",
@@ -163,8 +168,6 @@ const HeightWorkPermit = (props) => {
               preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileName}` : null,
             })),
           }));
-
-       
         })
         .catch((error) => {
           toast.error("Error fetching permit data: " + error.message);
@@ -183,7 +186,7 @@ const HeightWorkPermit = (props) => {
     contractorOrg: 'Organization',
     supervisorName: 'SupervisorName',
     contactNumber: 'ContactNumber',
-    reason: 'REASON',
+    REASON: 'REASON',
     additionalPpe: 'ADDITIONAL_PPE',
     scaffoldChecked: 'ScaffoldChecked',
     scaffoldTagged: 'ScaffoldTagged',
@@ -244,7 +247,7 @@ const HeightWorkPermit = (props) => {
       'permitDate', 'permitNumber', 'location', 'validUpto', 
       'fireAlarmPoint', 'totalWorkers', 'workDescription', 
       'contractorOrg', 'supervisorName', 'contactNumber',
-      'reason', 'additionalPpe'
+      'REASON', 'additionalPpe'
     ];
 
     basicFields.forEach(field => {
@@ -416,9 +419,6 @@ const HeightWorkPermit = (props) => {
         const errorText = await response.text();
         toast.error("Failed to submit: " + errorText);
       }
-         navigate('/login', { 
-      
-      });
     } catch (error) {
       toast.error("Error: " + error.message);
     }
@@ -535,7 +535,7 @@ const HeightWorkPermit = (props) => {
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              
+             
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Permit Number
@@ -549,7 +549,7 @@ const HeightWorkPermit = (props) => {
                 />
               </div>
 
-              <div>
+               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Date of Permit to Work
@@ -1129,21 +1129,123 @@ const HeightWorkPermit = (props) => {
               </tbody>
               
             </table>
-    
+
+            
+                            <div className="space-y-4">
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600 mb-2">Click to upload files or drag and drop</p>
+                            <p className="text-sm text-gray-500 mb-4">Maximum file size: 4MB per file • Supported formats: Images, PDF, DOC, DOCX, TXT</p>
+                            <input
+                              type="file"
+                              name="files"
+                              multiple
+                              onChange={handleFileUpload}
+                              className="hidden"
+                              id="file-upload"
+                              accept="image/*,application/pdf,.doc,.docx,.txt"
+                            />
+                            <label
+                              htmlFor="file-upload"
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
+                            >
+                              Browse Files
+                            </label>
+                          </div>
+                          {uploadErrors.length > 0 && (
+                            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5 text-red-500" />
+                                <h4 className="text-sm font-medium text-red-800">Upload Errors</h4>
+                              </div>
+                              <ul className="mt-2 text-sm text-red-700">
+                                {uploadErrors.map((error, index) => (
+                                  <li key={index}>• {error}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {formData.files.length > 0 && (
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-medium text-gray-700">Uploaded Files ({formData.files.length})</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {formData.files.map((fileObj) => (
+                                  <div key={fileObj.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                                    {fileObj.preview && fileObj.type && fileObj.type.startsWith("image/") ? (
+                                      <img src={fileObj.preview} alt={fileObj.name} className="w-12 h-12 object-cover rounded" />
+                                    ) : fileObj.url && fileObj.type && fileObj.type.startsWith("image/") ? (
+                                      <img src={fileObj.url} alt={fileObj.name} className="w-12 h-12 object-cover rounded" />
+                                    ) : (
+                                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                                        <FileText className="w-6 h-6 text-gray-500" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 truncate">{fileObj.name}</p>
+                                      <p className="text-xs text-gray-500">{formatFileSize(fileObj.size)}</p>
+                                      {(fileObj.preview || fileObj.url) && (
+                                        <a
+                                          href={fileObj.preview || fileObj.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                                        >
+                                          View
+                                        </a>
+                                      )}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeFile(fileObj.id)}
+                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+            
+            
+                                     <div className="mt-6">
+            <label className="block text-md font-medium text-gray-700 mb-2">Reason</label>
+            <input
+              type="text"
+              value={formData.REASON}
+              onChange={(e) => handleInputChange("REASON", e.target.value)}
+              className="w-full px-3 py-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter reason for work"
+            />
           </div>
+          </div>
+                <button 
+              onClick={approval}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+            Approve
+            </button>      <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Reject
+            </button>
         </div>
 
         <div className="flex justify-center space-x-4">
           <button
             onClick={handleSubmit}
-            className="px-6 py-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >
             Submit for Approval
           </button>
+          
         </div>
       </div>
     </div>
   );
 };
 
-export default HeightWorkPermit;
+export default HeightWorkPermit3;

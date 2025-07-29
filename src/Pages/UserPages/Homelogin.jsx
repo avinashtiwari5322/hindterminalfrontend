@@ -1,18 +1,14 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   MapPin,
   Users,
   FileText,
   Clock,
-  AlertTriangle,
   AlertCircle,
   Upload,
   X,
 } from "lucide-react";
-
-import hindLogo from "../../Assets/hindimg.png";
 
 const Home2 = () => {
   const [formData, setFormData] = useState({
@@ -33,8 +29,27 @@ const Home2 = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState({ type: "", message: "" });
   const [uploadErrors, setUploadErrors] = useState([]);
+
+  // Auto-generate permit number on component mount
+  useEffect(() => {
+    const generatePermitNumber = () => {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(currentDate.getDate()).padStart(2, '0');
+      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp for uniqueness
+      
+      const permitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        permitNumber: permitNumber
+      }));
+    };
+
+    generatePermitNumber();
+  }, []);
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -65,9 +80,8 @@ const Home2 = () => {
           name: file.name,
           size: file.size,
           type: file.type,
-          preview: file.type.startsWith("image/")
-            ? URL.createObjectURL(file)
-            : null,
+          preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
+          url: null,
         });
       }
     });
@@ -86,16 +100,6 @@ const Home2 = () => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleCheckboxChange = (section, item, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [item]: value,
-      },
     }));
   };
 
@@ -139,148 +143,28 @@ const Home2 = () => {
     return errors;
   };
 
-  // Function to prepare FormData for API call (including files)
-  const prepareFormData = () => {
-    const apiFormData = new FormData();
-    
-    // Add text fields
-    apiFormData.append('PermitDate', formData.permitDate);
-    apiFormData.append('NearestFireAlarmPoint', formData.fireAlarmPoint || '');
-    apiFormData.append('PermitNumber', formData.permitNumber);
-    apiFormData.append('TotalEngagedWorkers', parseInt(formData.totalWorkers) || 0);
-    apiFormData.append('WorkLocation', formData.location);
-    apiFormData.append('WorkDescription', formData.workDescription);
-    apiFormData.append('PermitValidUpTo', formData.validUpto);
-    apiFormData.append('Organization', formData.contractorOrg);
-    apiFormData.append('SupervisorName', formData.supervisorName);
-    apiFormData.append('ContactNumber', formData.contactNumber);
-    
-    // Add audit fields
-    apiFormData.append('Created_by', 'User'); // You can get this from auth context
-    apiFormData.append('Updated_by', 'User');
-    
-    // Add checkbox values (scaffold safety checklist)
-    Object.entries(formData.receiverChecks).forEach(([key, value]) => {
-      apiFormData.append(key, value);
-    });
-    
-    // Add checkbox values (issuer checks)
-    Object.entries(formData.issuerChecks).forEach(([key, value]) => {
-      apiFormData.append(key, value);
-    });
-    
-    // Add PPE checkbox values
-    Object.entries(formData.ppe).forEach(([key, value]) => {
-      apiFormData.append(key, value);
-    });
-    
-    // Add files
-    formData.files.forEach((fileObj) => {
-      apiFormData.append('documents', fileObj.file);
-    });
-    
-    return apiFormData;
-  };
-
-  // Function to post permit data to API with files
+  // Function to simulate API submission
   const postPermitData = async () => {
-    // Validate form before submission
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      setSubmitStatus({
-        type: "error",
-        message:
-          "Please fill in all required fields: " + validationErrors.join(", "),
-      });
+      alert("Please fill in all required fields: " + validationErrors.join(", "));
       return;
     }
 
     setLoading(true);
-    setSubmitStatus({ type: "", message: "" });
 
     try {
-      const formDataToSend = prepareFormData();
-
-      const response = await axios.post(
-        "https://hinbackend.onrender.com/api/permits",
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Upload Progress: ${percentCompleted}%`);
-          },
-        }
-      );
-
-      console.log("Response:", response.data);
-      setSubmitStatus({
-        type: "success",
-        message: `${response.data.message} (${response.data.uploadedFiles} files uploaded)`,
-      });
-
-      // Optional: Reset form after successful submission
-      // resetForm();
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log("Permit submitted:", formData);
+      alert(`Permit ${formData.permitNumber} submitted successfully!`);
+      
+      // Reset form after successful submission
+      resetForm();
     } catch (error) {
       console.error("Error posting permit data:", error);
-      setSubmitStatus({
-        type: "error",
-        message:
-          error.response?.data?.error ||
-          "Failed to submit permit. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to save draft (simplified version without files for now)
-  const saveDraft = async () => {
-    setLoading(true);
-    setSubmitStatus({ type: "", message: "" });
-
-    try {
-      const data = {
-        PermitDate: formData.permitDate,
-        NearestFireAlarmPoint: formData.fireAlarmPoint || null,
-        PermitNumber: formData.permitNumber,
-        TotalEngagedWorkers: parseInt(formData.totalWorkers) || 0,
-        WorkLocation: formData.location,
-        WorkDescription: formData.workDescription,
-        PermitValidUpTo: formData.validUpto,
-        Organization: formData.contractorOrg,
-        SupervisorName: formData.supervisorName,
-        ContactNumber: formData.contactNumber,
-        isDraft: true, // Flag to indicate this is a draft
-      };
-
-      const response = await axios.post(
-        "https://hinbackend.onrender.com/api/permits/draft",
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Draft saved:", response.data);
-      setSubmitStatus({
-        type: "success",
-        message: "Draft saved successfully!",
-      });
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      setSubmitStatus({
-        type: "error",
-        message:
-          error.response?.data?.message ||
-          "Failed to save draft. Please try again.",
-      });
+      alert("Failed to submit permit. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -295,9 +179,17 @@ const Home2 = () => {
       }
     });
     
+    // Generate new permit number when resetting
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const timestamp = Date.now().toString().slice(-4);
+    const newPermitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
+    
     setFormData({
       permitDate: "",
-      permitNumber: "",
+      permitNumber: newPermitNumber,
       location: "",
       validUpto: "",
       fireAlarmPoint: "",
@@ -311,91 +203,23 @@ const Home2 = () => {
       ppe: {},
       files: [],
     });
-    setSubmitStatus({ type: "", message: "" });
     setUploadErrors([]);
   };
 
-  const receiverCheckItems = [
-    {
-      id: "ScaffoldChecked",
-      text: "Have scaffolds been checked and certified in prescribed form by scaffold supervisor?",
-    },
-    {
-      id: "ScaffoldTagged",
-      text: "Have scaffolds been tagged with green card duly filled and signed by scaffold supervisor?",
-    },
-    {
-      id: "ScaffoldRechecked",
-      text: "Is scaffold rechecked and re-certified weekly?",
-    },
-    {
-      id: "ScaffoldErected",
-      text: "Is scaffold erected on firm ground and sole plate and base plate have been used?",
-    },
-    {
-      id: "HangingBaskets",
-      text: "Are the hanging baskets used of proper construction, tested and certified for the purpose?",
-    },
-    {
-      id: "PlatformSafe",
-      text: "Is the work platform made free of hazards of all traps/trips/slips and fall?",
-    },
-    {
-      id: "CatLadders",
-      text: "Have cat ladders, crawling boards etc been used for safe working at sloping roof?",
-    },
-    {
-      id: "EdgeProtection",
-      text: "Has edge protection provided against fall from roof/elevated space?",
-    },
-  ];
-
-  const issuerCheckItems = [
-    {
-      id: "Platforms",
-      text: "Are the platforms been provided with Toe board, guardrail and area below is barricaded?",
-    },
-    {
-      id: "SafetyHarness",
-      text: "Checked whether safety harness and necessary arrangement for tying the lifeline, fall arresters etc provided to the worker for working at height?",
-    },
-    {
-      id: "EnergyPrecautions",
-      text: "Have precautions been listed below for safe working at height for source of energy Such as electricity?",
-    },
-    {
-      id: "Illumination",
-      text: "Is the raised work surface properly illuminated?",
-    },
-    {
-      id: "UnguardedAreas",
-      text: "Are the workers working near unguarded shafts, excavations or hot line?",
-    },
-    {
-      id: "FallProtection",
-      text: "Checked for provision of collective fall protection such as safety net?",
-    },
-    {
-      id: "AccessMeans",
-      text: "Are proper means of access to the scaffold including use of standard aluminium ladder provided?",
-    },
-  ];
-
-  const ppeItems = [
-    { id: "SafetyHelmet", text: "Safety Helmet" },
-    { id: "SafetyJacket", text: "Safety Jacket" },
-    { id: "SafetyShoes", text: "Safety Shoes" },
-    { id: "Gloves", text: "Gloves" },
-    { id: "SafetyGoggles", text: "Safety Goggles" },
-    { id: "FaceShield", text: "Face Shield" },
-    { id: "DustMask", text: "Dust Mask" },
-    { id: "EarPlugEarmuff", text: "Ear plug/Earmuff" },
-    { id: "AntiSlipFootwear", text: "Anti Slip footwear" },
-    { id: "SafetyNet", text: "Safety Net" },
-    { id: "AnchorPointLifelines", text: "Anchor Point/Lifelines" },
-    { id: "SelfRetractingLifeline", text: "Self retracting Lifeline (SRL)" },
-    { id: "FullBodyHarness", text: "Full body harness with lanyard or shock absorbers" },
-  ];
+  // Function to regenerate permit number (for demonstration)
+  const regeneratePermitNumber = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const timestamp = Date.now().toString().slice(-4);
+    const newPermitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
+    
+    setFormData(prev => ({
+      ...prev,
+      permitNumber: newPermitNumber
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -404,11 +228,8 @@ const Home2 = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center space-x-2">
-              <img
-                src={hindLogo}
-                alt="Hind Logo"
-                className="h-12 w-auto object-contain"
-              />
+           
+             
             </div>
             <div className="text-right text-sm text-gray-600">
               <div>Doc. No.: HTPL/OHS/23</div>
@@ -430,26 +251,6 @@ const Home2 = () => {
           </div>
         </div>
 
-        {/* Submit Status Message */}
-        {submitStatus.message && (
-          <div
-            className={`mb-6 p-4 rounded-lg ${
-              submitStatus.type === "success"
-                ? "bg-green-50 border border-green-200 text-green-800"
-                : "bg-red-50 border border-red-200 text-red-800"
-            }`}
-          >
-            <div className="flex items-center">
-              {submitStatus.type === "success" ? (
-                <AlertCircle className="w-5 h-5 text-green-600 mr-2" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
-              )}
-              {submitStatus.message}
-            </div>
-          </div>
-        )}
-
         {/* Section 1: Work Specification */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
@@ -461,6 +262,35 @@ const Home2 = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Permit Number (Auto-generated)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.permitNumber}
+                    readOnly
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" title="Auto-generated"></div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">
+                    This permit number is automatically generated and cannot be modified
+                  </p>
+                  <button
+                    type="button"
+                    onClick={regeneratePermitNumber}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Date of Permit to Work *
                 </label>
@@ -469,22 +299,6 @@ const Home2 = () => {
                   value={formData.permitDate}
                   onChange={(e) =>
                     handleInputChange("permitDate", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Permit Number *
-                </label>
-                <input
-                  type="text"
-                  placeholder="HTPL/HWP/"
-                  value={formData.permitNumber}
-                  onChange={(e) =>
-                    handleInputChange("permitNumber", e.target.value)
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
@@ -688,9 +502,15 @@ const Home2 = () => {
                         key={fileObj.id}
                         className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
                       >
-                        {fileObj.preview ? (
+                        {fileObj.preview && fileObj.type && fileObj.type.startsWith("image/") ? (
                           <img
                             src={fileObj.preview}
+                            alt={fileObj.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : fileObj.url && fileObj.type && fileObj.type.startsWith("image/") ? (
+                          <img
+                            src={fileObj.url}
                             alt={fileObj.name}
                             className="w-12 h-12 object-cover rounded"
                           />
@@ -706,6 +526,16 @@ const Home2 = () => {
                           <p className="text-xs text-gray-500">
                             {formatFileSize(fileObj.size)}
                           </p>
+                          {(fileObj.preview || fileObj.url) && (
+                            <a
+                              href={fileObj.preview || fileObj.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                            >
+                              View
+                            </a>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -726,18 +556,10 @@ const Home2 = () => {
         {/* Action Buttons */}
         <div className="flex justify-center space-x-4 pb-8">
           <button
-            onClick={saveDraft}
-            disabled={loading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={() => resetForm()}
+            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
           >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Saving...
-              </>
-            ) : (
-              "Save Draft"
-            )}
+            Reset Form
           </button>
           <button
             onClick={postPermitData}
@@ -752,13 +574,6 @@ const Home2 = () => {
             ) : (
               "Submit for Approval"
             )}
-          </button>
-          <button
-            onClick={resetForm}
-            disabled={loading}
-            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Reset Form
           </button>
         </div>
       </div>
