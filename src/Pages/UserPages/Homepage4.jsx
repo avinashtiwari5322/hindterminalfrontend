@@ -79,7 +79,7 @@ const HeightWorkPermit3 = (props) => {
   }
   useEffect(() => {
     if (isAdminView && id) {
-      fetch(`https://hindterminal56.onrender.com/api/permits/${id}`)
+      fetch(`http://localhost:4000/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
           setFormData((prev) => ({
@@ -165,8 +165,8 @@ const HeightWorkPermit3 = (props) => {
               name: file.FileName || file.originalName,
               size: file.FileSize || file.size,
               type: file.FileType || file.mimetype,
-              url: file.FilePath ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
+              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
             })),
           }));
         })
@@ -408,7 +408,7 @@ const HeightWorkPermit3 = (props) => {
         }
       });
 
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
         method: "put",
         body: form,
       });
