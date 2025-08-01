@@ -15,10 +15,11 @@ import MyRequests from "./Pages/AdminPages/Approval";
 import MyRequests2 from "./Pages/AdminPages/Myrequest2";
 import MyRequests3 from "./Pages/AdminPages/Myrequest3";
 import PermitOptions from "./Pages/UserPages/Option";
+import { AuthProvider } from "./AuthContext"; // Make sure this import exists
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <ToastContainer 
         position="top-right" 
         autoClose={3000} 
@@ -31,7 +32,7 @@ function App() {
       />
       <Router>
         <Routes>
-          {/* Login route WITHOUT sidebar - must come FIRST */}
+          {/* Login routes WITHOUT sidebar */}
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Login />} />
           
@@ -50,7 +51,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
-    </>
+    </AuthProvider>
   );
 }
 

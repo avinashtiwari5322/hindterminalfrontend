@@ -10,6 +10,7 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
  
@@ -48,9 +49,12 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      setIsLoading(false);
       return;
     }
 
@@ -59,22 +63,30 @@ const Login = () => {
     
     if (!userConfig) {
       setLoginError('Invalid User ID. Please use: user, admin, superadmin, or filler');
+      setIsLoading(false);
       return;
     }
 
     try {
-      // Simulate login with role information
-      const success = await login(formData.userId, formData.password, userConfig.role);
-      
-      if (success || (formData.userId && formData.password)) {
+      // For demo purposes, accept any password for predefined users
+      // In production, you'd validate against a real backend
+      if (formData.password.length >= 6) {
+        // Call the login function from context
+        if (login) {
+          await login(formData.userId, formData.password, userConfig.role);
+        }
+        
         // Navigate based on the user's predefined route
-        navigate(userConfig.route);
+        console.log('Navigating to:', userConfig.route); // Debug log
+        navigate(userConfig.route, { replace: true });
       } else {
-        setLoginError('Invalid credentials');
+        setLoginError('Password must be at least 6 characters');
       }
     } catch (error) {
-      // Fallback - navigate based on user config for demo
-      navigate(userConfig.route);
+      console.error('Login error:', error);
+      setLoginError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,12 +123,12 @@ const Login = () => {
               className={`w-full px-3 py-2 border ${
                 errors.userId ? 'border-red-300' : 'border-gray-300'
               } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              
+              placeholder="Enter user ID (user, admin, superadmin, filler)"
+              disabled={isLoading}
             />
             {errors.userId && (
               <p className="mt-1 text-sm text-red-600">{errors.userId}</p>
             )}
-            
           </div>
 
           {/* Password Input */}
@@ -133,6 +145,7 @@ const Login = () => {
                 errors.password ? 'border-red-300' : 'border-gray-300'
               } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="Enter your password"
+              disabled={isLoading}
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -141,15 +154,22 @@ const Login = () => {
 
           <button
             onClick={handleSubmit}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={isLoading}
+            className={`w-full px-6 py-3 ${
+              isLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white rounded-lg transition-colors font-medium`}
           >
-            Sign In
+            {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
         </div>
 
-      
-        {/* User Guide */}
-       
+        {/* Debug Info for Production */}
+        <div className="mt-4 text-xs text-gray-500">
+          <p>Valid User IDs: user, admin, superadmin, filler</p>
+          <p>Min password length: 6 characters</p>
+        </div>
       </div>
     </div>
   );
