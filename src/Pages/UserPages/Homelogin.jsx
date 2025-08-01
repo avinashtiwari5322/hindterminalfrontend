@@ -7,7 +7,7 @@ import {
   Users,
   FileText,
   Clock,
-  AlertTriangle,
+
   AlertCircle,
   Upload,
   X,
@@ -179,15 +179,7 @@ const Home2 = () => {
     }));
   };
 
-  const handleCheckboxChange = (section, item, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [item]: value,
-      },
-    }));
-  };
+
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -296,9 +288,7 @@ const Home2 = () => {
             'Content-Type': 'multipart/form-data',
           },
           onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
+            
             // Optionally, show a toast for progress
           },
         }
@@ -333,157 +323,6 @@ const Home2 = () => {
     }
   };
 
-  // Function to save draft (simplified version without files for now)
-  const saveDraft = async () => {
-    setLoading(true);
-
-    try {
-      const data = {
-        PermitDate: formData.permitDate,
-        NearestFireAlarmPoint: formData.fireAlarmPoint || null,
-        PermitNumber: formData.permitNumber,
-        TotalEngagedWorkers: parseInt(formData.totalWorkers) || 0,
-        WorkLocation: formData.location,
-        WorkDescription: formData.workDescription,
-        PermitValidUpTo: formData.validUpto,
-        Organization: formData.contractorOrg,
-        SupervisorName: formData.supervisorName,
-        ContactNumber: formData.contactNumber,
-        isDraft: true, // Flag to indicate this is a draft
-      };
-
-      const response = await axios.post(
-        "http://localhost:4000/api/permits/draft",
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log("Draft saved:", response.data);
-      toast.success("Draft saved successfully!");
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast.error(
-        error.response?.data?.message ||
-        "Failed to save draft. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to reset form
-  const resetForm = () => {
-    // Clean up blob URLs to prevent memory leaks
-    formData.files.forEach(fileObj => {
-      if (fileObj.preview) {
-        URL.revokeObjectURL(fileObj.preview);
-      }
-    });
-    
-    setFormData({
-      permitDate: getTodayDate(),
-      permitNumber: "",
-      location: "",
-      validUpto: getValidUptoDate(),
-      fireAlarmPoint: "",
-      totalWorkers: "",
-      workDescription: "",
-      contractorOrg: "",
-      supervisorName: "",
-      contactNumber: "",
-      receiverChecks: {},
-      issuerChecks: {},
-      ppe: {},
-      files: [],
-    });
-    setUploadErrors([]);
-  };
-
-  const receiverCheckItems = [
-    {
-      id: "ScaffoldChecked",
-      text: "Have scaffolds been checked and certified in prescribed form by scaffold supervisor?",
-    },
-    {
-      id: "ScaffoldTagged",
-      text: "Have scaffolds been tagged with green card duly filled and signed by scaffold supervisor?",
-    },
-    {
-      id: "ScaffoldRechecked",
-      text: "Is scaffold rechecked and re-certified weekly?",
-    },
-    {
-      id: "ScaffoldErected",
-      text: "Is scaffold erected on firm ground and sole plate and base plate have been used?",
-    },
-    {
-      id: "HangingBaskets",
-      text: "Are the hanging baskets used of proper construction, tested and certified for the purpose?",
-    },
-    {
-      id: "PlatformSafe",
-      text: "Is the work platform made free of hazards of all traps/trips/slips and fall?",
-    },
-    {
-      id: "CatLadders",
-      text: "Have cat ladders, crawling boards etc been used for safe working at sloping roof?",
-    },
-    {
-      id: "EdgeProtection",
-      text: "Has edge protection provided against fall from roof/elevated space?",
-    },
-  ];
-
-  const issuerCheckItems = [
-    {
-      id: "Platforms",
-      text: "Are the platforms been provided with Toe board, guardrail and area below is barricaded?",
-    },
-    {
-      id: "SafetyHarness",
-      text: "Checked whether safety harness and necessary arrangement for tying the lifeline, fall arresters etc provided to the worker for working at height?",
-    },
-    {
-      id: "EnergyPrecautions",
-      text: "Have precautions been listed below for safe working at height for source of energy Such as electricity?",
-    },
-    {
-      id: "Illumination",
-      text: "Is the raised work surface properly illuminated?",
-    },
-    {
-      id: "UnguardedAreas",
-      text: "Are the workers working near unguarded shafts, excavations or hot line?",
-    },
-    {
-      id: "FallProtection",
-      text: "Checked for provision of collective fall protection such as safety net?",
-    },
-    {
-      id: "AccessMeans",
-      text: "Are proper means of access to the scaffold including use of standard aluminium ladder provided?",
-    },
-  ];
-
-  const ppeItems = [
-    { id: "SafetyHelmet", text: "Safety Helmet" },
-    { id: "SafetyJacket", text: "Safety Jacket" },
-    { id: "SafetyShoes", text: "Safety Shoes" },
-    { id: "Gloves", text: "Gloves" },
-    { id: "SafetyGoggles", text: "Safety Goggles" },
-    { id: "FaceShield", text: "Face Shield" },
-    { id: "DustMask", text: "Dust Mask" },
-    { id: "EarPlugEarmuff", text: "Ear plug/Earmuff" },
-    { id: "AntiSlipFootwear", text: "Anti Slip footwear" },
-    { id: "SafetyNet", text: "Safety Net" },
-    { id: "AnchorPointLifelines", text: "Anchor Point/Lifelines" },
-    { id: "SelfRetractingLifeline", text: "Self retracting Lifeline (SRL)" },
-    { id: "FullBodyHarness", text: "Full body harness with lanyard or shock absorbers" },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">

@@ -7,7 +7,7 @@ import {
   Users,
   FileText,
   Clock,
-  AlertTriangle,
+
   AlertCircle,
   Upload,
   X,
@@ -121,7 +121,7 @@ const HeightWorkPermit2 = (props) => {
               "earPlugOrEarmuff": data.EarPlugEarmuff || false,
               "antiSlipFootwear": data.AntiSlipFootwear || false,
               "Safety Net": data.SafetyNet || false,
-              "antiSlipFootwear": data.AnchorPointLifelines || false,
+              
               "selfRetractingLifeline": data.SelfRetractingLifeline || false,
               "fullBodyHarness": data.FullBodyHarness || false,
             },

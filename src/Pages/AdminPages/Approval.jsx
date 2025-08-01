@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Filter,
-  CheckCircle,
-  XCircle,
+
   FileText,
   Clock,
   MapPin,

@@ -6,7 +6,7 @@ import {
   Users,
   FileText,
   Clock,
-  AlertTriangle,
+
   AlertCircle,
   Upload,
   X,
@@ -70,7 +70,7 @@ const HeightWorkPermit = (props) => {
     additionalPpe: "",
     reason: ""
   });
-  const [uploadErrors, setUploadErrors] = useState([]);
+  const [uploadErrors] = useState([]);
 
   useEffect(() => {
     if (isAdminView && id) {
@@ -119,7 +119,7 @@ const HeightWorkPermit = (props) => {
               "faceShield": data.FaceShield || false,
               "dustMask": data.DustMask || false,
               "earPlugOrEarmuff": data.EarPlugEarmuff || false,
-              "antiSlipFootwear": data.AntiSlipFootwear || false,
+            
               "Safety Net": data.SafetyNet || false,
               "antiSlipFootwear": data.AnchorPointLifelines || false,
               "selfRetractingLifeline": data.SelfRetractingLifeline || false,
@@ -319,36 +319,7 @@ const HeightWorkPermit = (props) => {
     return apiData;
   };
 
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const maxSize = 4 * 1024 * 1024;
-    const errors = [];
-    const validFiles = [];
 
-    files.forEach((file, index) => {
-      if (file.size > maxSize) {
-        errors.push(`File "${file.name}" exceeds 4MB limit`);
-      } else {
-        validFiles.push({
-          id: Date.now() + index,
-          file,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : null,
-          url: null,
-        });
-      }
-    });
-
-    setUploadErrors(errors);
-    setFormData((prev) => ({
-      ...prev,
-      files: [...prev.files, ...validFiles],
-    }));
-
-    e.target.value = "";
-  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({

@@ -6,7 +6,7 @@ import {
   Users,
   FileText,
   Clock,
-  AlertTriangle,
+
   AlertCircle,
   Upload,
   X,
@@ -14,7 +14,6 @@ import {
 
 import hindLogo from "../../Assets/hindimg.png";
 import { toast } from 'react-toastify';
-import { Printer } from "lucide-react";
 
 const HeightWorkPermit3 = (props) => {
   const { id } = useParams();
@@ -126,7 +125,7 @@ const HeightWorkPermit3 = (props) => {
               "earPlugOrEarmuff": data.EarPlugEarmuff || false,
               "antiSlipFootwear": data.AntiSlipFootwear || false,
               "Safety Net": data.SafetyNet || false,
-              "antiSlipFootwear": data.AnchorPointLifelines || false,
+  
               "selfRetractingLifeline": data.SelfRetractingLifeline || false,
               "fullBodyHarness": data.FullBodyHarness || false,
             },
@@ -176,151 +175,7 @@ const HeightWorkPermit3 = (props) => {
     }
   }, [isAdminView, id]);
 
-  const API_FIELD_MAPPING = {
-    permitDate: 'PermitDate',
-    permitNumber: 'PermitNumber',
-    location: 'WorkLocation',
-    validUpto: 'PermitValidUpTo',
-    fireAlarmPoint: 'NearestFireAlarmPoint',
-    totalWorkers: 'TotalEngagedWorkers',
-    workDescription: 'WorkDescription',
-    contractorOrg: 'Organization',
-    supervisorName: 'SupervisorName',
-    contactNumber: 'ContactNumber',
-    REASON: 'REASON',
-    additionalPpe: 'ADDITIONAL_PPE',
-    scaffoldChecked: 'ScaffoldChecked',
-    scaffoldTagged: 'ScaffoldTagged',
-    scaffoldRechecked: 'ScaffoldRechecked',
-    scaffoldErected: 'ScaffoldErected',
-    hangingBaskets: 'HangingBaskets',
-    platformSafe: 'PlatformSafe',
-    catLadders: 'CatLadders',
-    edgeProtection: 'EdgeProtection',
-    platforms: 'Platforms',
-    safetyHarness: 'SafetyHarness',
-    energyPrecautions: 'EnergyPrecautions',
-    illumination: 'Illumination',
-    unguardedAreas: 'UnguardedAreas',
-    fallProtection: 'FallProtection',
-    accessMeans: 'AccessMeans',
-    safetyHelmet: 'SafetyHelmet',
-    safetyJacket: 'SafetyJacket',
-    safetyShoes: 'SafetyShoes',
-    gloves: 'Gloves',
-    safetyGoggles: 'SafetyGoggles',
-    faceShield: 'FaceShield',
-    dustMask: 'DustMask',
-    earPlugEarmuff: 'EarPlugEarmuff',
-    antiSlipFootwear: 'AntiSlipFootwear',
-    safetyNet: 'SafetyNet',
-    anchorPointLifelines: 'AnchorPointLifelines',
-    selfRetractingLifeline: 'SelfRetractingLifeline',
-    fullBodyHarness: 'FullBodyHarness',
-    issuerName: 'Issuer_Name',
-    issuerDesignation: 'Issuer_Designation',
-    issuerDateTime: 'Issuer_DateTime',
-    issuerUpdatedBy: 'Issuer_UpdatedBy',
-    receiverName: 'Receiver_Name',
-    receiverDesignation: 'Receiver_Designation',
-    receiverDateTime: 'Receiver_DateTime',
-    receiverUpdatedBy: 'Receiver_UpdatedBy',
-    energyIsolateName: 'EnergyIsolate_Name',
-    energyIsolateDesignation: 'EnergyIsolate_Designation',
-    energyIsolateDateTime: 'EnergyIsolate_DateTime',
-    energyIsolateUpdatedBy: 'EnergyIsolate_UpdatedBy',
-    reviewerName: 'Reviewer_Name',
-    reviewerDesignation: 'Reviewer_Designation',
-    reviewerDateTime: 'Reviewer_DateTime',
-    reviewerUpdatedBy: 'Reviewer_UpdatedBy',
-    approverName: 'Approver_Name',
-    approverDesignation: 'Approver_Designation',
-    approverDateTime: 'Approver_DateTime',
-    approverUpdatedBy: 'Approver_UpdatedBy'
-  };
-
-  const convertToApiFormat = (formData) => {
-    const apiData = {
-      PermitID: formData.permitId || null,
-    };
-
-    const basicFields = [
-      'permitDate', 'permitNumber', 'location', 'validUpto', 
-      'fireAlarmPoint', 'totalWorkers', 'workDescription', 
-      'contractorOrg', 'supervisorName', 'contactNumber',
-      'REASON', 'additionalPpe'
-    ];
-
-    basicFields.forEach(field => {
-      if (formData[field] && API_FIELD_MAPPING[field]) {
-        if (field.includes('Date') || field === 'validUpto') {
-          apiData[API_FIELD_MAPPING[field]] = new Date(formData[field]).toISOString();
-        } else {
-          apiData[API_FIELD_MAPPING[field]] = formData[field];
-        }
-      }
-    });
-
-    Object.entries(formData.receiverChecks || {}).forEach(([key, value]) => {
-      const apiKey = API_FIELD_MAPPING[key];
-      if (apiKey) {
-        apiData[apiKey] = value === "done";
-      }
-    });
-
-    Object.entries(formData.issuerChecks || {}).forEach(([key, value]) => {
-      const apiKey = API_FIELD_MAPPING[key];
-      if (apiKey) {
-        apiData[apiKey] = value === "done";
-      }
-    });
-
-    Object.entries(formData.ppe || {}).forEach(([key, value]) => {
-      const apiKey = API_FIELD_MAPPING[key];
-      if (apiKey) {
-        apiData[apiKey] = !!value;
-      }
-    });
-
-    const workflowSections = ['issuer', 'receiver', 'energyIsolate', 'reviewer', 'approver'];
-    workflowSections.forEach(section => {
-      const sectionData = formData[section] || {};
-      Object.entries(sectionData).forEach(([key, value]) => {
-        const fieldKey = `${section}${key.charAt(0).toUpperCase() + key.slice(1)}`;
-        const apiKey = API_FIELD_MAPPING[fieldKey];
-        if (apiKey) {
-          if (key.includes('dateTime') && value) {
-            apiData[apiKey] = new Date(value).toISOString();
-          } else {
-            apiData[apiKey] = value || null;
-          }
-        }
-      });
-    });
-
-    if (formData.files && formData.files.length > 0) {
-      formData.files.forEach((file, index) => {
-        apiData[`File${index + 1}_Name`] = file.name;
-        apiData[`File${index + 1}_Size`] = file.size;
-        apiData[`File${index + 1}_Type`] = file.type;
-        apiData[`File${index + 1}_UploadDate`] = new Date().toISOString();
-        if (file.file) {
-          apiData[`File${index + 1}_Data`] = file.file; // File data for FormData
-        }
-      });
-    }
-
-    apiData.Created_by = formData.createdBy || 'System';
-    apiData.Updated_by = formData.updatedBy || 'System';
-
-    Object.keys(apiData).forEach(key => {
-      if (apiData[key] === null || apiData[key] === undefined || apiData[key] === '') {
-        delete apiData[key];
-      }
-    });
-
-    return apiData;
-  };
+  
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -395,35 +250,6 @@ const HeightWorkPermit3 = (props) => {
     }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      const form = new FormData();
-      const apiData = convertToApiFormat(formData);
-
-      Object.entries(apiData).forEach(([key, value]) => {
-        if (key.startsWith('File') && key.endsWith('_Data')) {
-          form.append('files', value);
-        } else {
-          form.append(key, value);
-        }
-      });
-
-      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
-        method: "put",
-        body: form,
-      });
-
-      if (response.ok) {
-        toast.success("Permit submitted successfully!");
-        console.log("API Data submitted:", apiData);
-      } else {
-        const errorText = await response.text();
-        toast.error("Failed to submit: " + errorText);
-      }
-    } catch (error) {
-      toast.error("Error: " + error.message);
-    }
-  };
 
   const receiverCheckItems = [
     {

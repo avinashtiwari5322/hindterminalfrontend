@@ -1,24 +1,18 @@
 import React, { useState } from "react";
 import {
-  Home,
+
   User,
-  Settings,
-  Mail,
-  Bell,
-  Search,
-  Menu,
+
   X,
   ChevronRight,
-  FileText,
-  Users,
+
   BarChart3,
-  Calendar,
-  Heart,
+ 
   Grid3x3,
 } from "lucide-react";
 import hindLogo from '../Assets/hindimg.png';
 import { Link } from "react-router-dom"; // Add this import
-import MyRequests from "../Pages/AdminPages/Approval";
+
 import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
 const SidebarNavbar = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
