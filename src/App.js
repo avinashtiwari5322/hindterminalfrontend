@@ -15,6 +15,7 @@ import HeightWorkPermit3 from "./Pages/UserPages/Homepage4";
 import MyRequests from "./Pages/AdminPages/Approval";
 import MyRequests2 from "./Pages/AdminPages/Myrequest2";
 import MyRequests3 from "./Pages/AdminPages/Myrequest3";
+import PermitOptions from "./Pages/UserPages/Option";
 function App() {
   return (
     <>
@@ -23,7 +24,7 @@ function App() {
         <Routes>
           {/* Routes with Sidebar layout */}
           <Route element={<SidebarNavbar />}>
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/" element={<Login />} />
             <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="/Home" element={<ProtectedRoute><Home2 /></ProtectedRoute>} />
             <Route path="/Approval" element={<ProtectedRoute><Approval /></ProtectedRoute>} />
@@ -31,8 +32,9 @@ function App() {
             <Route path="/approval/:id" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/approval2/:id" element={<ProtectedRoute><HeightWorkPermit2 /></ProtectedRoute>} />
                        <Route path="/approval3/:id" element={<ProtectedRoute><HeightWorkPermit3 /></ProtectedRoute>} />
-
                           <Route path="/login/requestuser" element={<ProtectedRoute><MyRequests/></ProtectedRoute>} />
+                          <Route path="/login/option" element={<ProtectedRoute><PermitOptions/></ProtectedRoute>} />
+
               <Route path="/login/requestadmin" element={<ProtectedRoute><MyRequests2 /></ProtectedRoute>} />
                        <Route path="/login/requestsuperadmin" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
 

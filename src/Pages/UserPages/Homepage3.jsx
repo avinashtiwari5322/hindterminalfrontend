@@ -15,6 +15,7 @@ import {
 
 import hindLogo from "../../Assets/hindimg.png";
 import { toast } from 'react-toastify';
+import { Printer } from "lucide-react";
 
 const HeightWorkPermit2 = (props) => {
     const navigate = useNavigate()
@@ -91,38 +92,38 @@ const HeightWorkPermit2 = (props) => {
             reason: data.REASON || "",
             additionalPpe: data.ADDITIONAL_PPE || "",
             receiverChecks: {
-              scaffoldChecked: data.ScaffoldChecked ? "done" : "",
-              scaffoldTagged: data.ScaffoldTagged ? "done" : "",
-              scaffoldRechecked: data.ScaffoldRechecked ? "done" : "",
-              scaffoldErected: data.ScaffoldErected ? "done" : "",
-              hangingBaskets: data.HangingBaskets ? "done" : "",
-              platformSafe: data.PlatformSafe ? "done" : "",
-              catLadders: data.CatLadders ? "done" : "",
-              edgeProtection: data.EdgeProtection ? "done" : "",
+              scaffoldChecked: data.ScaffoldChecked ? "done" : "not-required",
+              scaffoldTagged: data.ScaffoldTagged ? "done" : "not-required",
+              scaffoldRechecked: data.ScaffoldRechecked ? "done" : "not-required",
+              scaffoldErected: data.ScaffoldErected ? "done" : "not-required",
+              hangingBaskets: data.HangingBaskets ? "done" : "not-required",
+              platformSafe: data.PlatformSafe ? "done" : "not-required",
+              catLadders: data.CatLadders ? "done" : "not-required",
+              edgeProtection: data.EdgeProtection ? "done" : "not-required",
             },
             issuerChecks: {
-              platforms: data.Platforms ? "done" : "",
-              safetyHarness: data.SafetyHarness ? "done" : "",
-              energyPrecautions: data.EnergyPrecautions ? "done" : "",
-              illumination: data.Illumination ? "done" : "",
-              unguardedAreas: data.UnguardedAreas ? "done" : "",
-              fallProtection: data.FallProtection ? "done" : "",
-              accessMeans: data.AccessMeans ? "done" : "",
+              platforms: data.Platforms ? "done" : "not-required",
+              safetyHarness: data.SafetyHarness ? "done" : "not-required",
+              energyPrecautions: data.EnergyPrecautions ? "done" : "not-required",
+              illumination: data.Illumination ? "done" : "not-required",
+              unguardedAreas: data.UnguardedAreas ? "done" : "not-required",
+              fallProtection: data.FallProtection ? "done" : "not-required",
+              accessMeans: data.AccessMeans ? "done" : "not-required",
             },
             ppe: {
-              "Safety Helmet": data.SafetyHelmet || false,
-              "Safety Jacket": data.SafetyJacket || false,
-              "Safety Shoes": data.SafetyShoes || false,
-              Gloves: data.Gloves || false,
-              "Safety Goggles": data.SafetyGoggles || false,
-              "Face Shield": data.FaceShield || false,
-              "Dust Mask": data.DustMask || false,
-              "Ear plug/Earmuff": data.EarPlugEarmuff || false,
-              "Anti Slip footwear": data.AntiSlipFootwear || false,
+              "safetyHelmet": data.SafetyHelmet || false,
+              "safetyJacket": data.SafetyJacket || false,
+              "safetyShoes": data.SafetyShoes || false,
+              "gloves": data.Gloves || false,
+              "safetyGoggles": data.SafetyGoggles || false,
+              "faceShield": data.FaceShield || false,
+              "dustMask": data.DustMask || false,
+              "earPlugOrEarmuff": data.EarPlugEarmuff || false,
+              "antiSlipFootwear": data.AntiSlipFootwear || false,
               "Safety Net": data.SafetyNet || false,
-              "Anchor Point/Lifelines": data.AnchorPointLifelines || false,
-              "Self retracting Lifeline (SRL)": data.SelfRetractingLifeline || false,
-              "Full body harness with lanyard or shock absorbers": data.FullBodyHarness || false,
+              "antiSlipFootwear": data.AnchorPointLifelines || false,
+              "selfRetractingLifeline": data.SelfRetractingLifeline || false,
+              "fullBodyHarness": data.FullBodyHarness || false,
             },
             issuer: {
               name: data.Issuer_Name || "",
@@ -159,8 +160,8 @@ const HeightWorkPermit2 = (props) => {
               name: file.FileName || file.originalName,
               size: file.FileSize || file.size,
               type: file.FileType || file.mimetype,
-              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileName}` : undefined,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileName}` : null,
+              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
             })),
           }));
         })
@@ -402,8 +403,8 @@ const HeightWorkPermit2 = (props) => {
         }
       });
 
-      const response = await fetch("http://localhost:4000/api/permits", {
-        method: "POST",
+      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
+        method: "put",
         body: form,
       });
       
@@ -418,6 +419,33 @@ const HeightWorkPermit2 = (props) => {
         navigate('/login', { 
       
       });
+    } catch (error) {
+      toast.error("Error: " + error.message);
+    }
+  };
+
+  const handleHoldClick = async () => {
+    if (!formData.reason) {
+      toast.error("Please provide a reason for putting the permit on hold");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}/hold`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ reason: formData.reason })
+      });
+
+      if (response.ok) {
+        toast.success("Permit has been put on hold and notifications have been sent");
+        navigate('/login');
+      } else {
+        const errorText = await response.text();
+        toast.error("Failed to put permit on hold: " + errorText);
+      }
     } catch (error) {
       toast.error("Error: " + error.message);
     }
@@ -490,19 +518,19 @@ const HeightWorkPermit2 = (props) => {
   ];
 
   const ppeItems = [
-    "Safety Helmet",
-    "Safety Jacket",
-    "Safety Shoes",
-    "Gloves",
-    "Safety Goggles",
-    "Face Shield",
-    "Dust Mask",
-    "Ear plug/Earmuff",
-    "Anti Slip footwear",
-    "Safety Net",
-    "Anchor Point/Lifelines",
-    "Self retracting Lifeline (SRL)",
-    "Full body harness with lanyard or shock absorbers",
+    { id: "safetyHelmet", text: "Safety Helmet" },
+    { id: "safetyJacket", text: "Safety Jacket" },
+    { id: "safetyShoes", text: "Safety Shoes" },
+    { id: "gloves", text: "Gloves" },
+    { id: "safetyGoggles", text: "Safety Goggles" },
+    { id: "faceShield", text: "Face Shield" },
+    { id: "dustMask", text: "Dust Mask" },
+    { id: "earPlugEarmuff", text: "Ear plug/Earmuff" },
+    { id: "antiSlipFootwear", text: "Anti Slip footwear" },
+    { id: "safetyNet", text: "Safety Net" },
+    { id: "anchorPointLifelines", text: "Anchor Point/Lifelines" },
+    { id: "selfRetractingLifeline", text: "Self retracting Lifeline (SRL)" },
+    { id: "fullBodyHarness", text: "Full body harness with lanyard or shock absorbers" },
   ];
 
   return (
@@ -548,15 +576,14 @@ const HeightWorkPermit2 = (props) => {
                 />
               </div>
 
-              <div>
+             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Date of Permit to Work
+                  Nearest Fire Alarm Point
                 </label>
                 <input
-                  type="date"
-                  value={formData.permitDate}
-                  onChange={(e) => handleInputChange("permitDate", e.target.value)}
+                  type="text"
+                  value={formData.fireAlarmPoint}
+                  onChange={(e) => handleInputChange("fireAlarmPoint", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -588,12 +615,13 @@ const HeightWorkPermit2 = (props) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nearest Fire Alarm Point
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Date of Permit to Work
                 </label>
                 <input
-                  type="text"
-                  value={formData.fireAlarmPoint}
-                  onChange={(e) => handleInputChange("fireAlarmPoint", e.target.value)}
+                  type="date"
+                  value={formData.permitDate}
+                  onChange={(e) => handleInputChange("permitDate", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -658,29 +686,9 @@ const HeightWorkPermit2 = (props) => {
           <div className="bg-white rounded-lg shadow-md p-6 mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <Upload className="w-5 h-5 text-purple-600" />
-              Supporting Documents & Images
+              Uploaded Images
             </h3>
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">Click to upload files or drag and drop</p>
-                <p className="text-sm text-gray-500 mb-4">Maximum file size: 4MB per file • Supported formats: Images, PDF, DOC, DOCX, TXT</p>
-                <input
-                  type="file"
-                  name="files"
-                  multiple
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                  accept="image/*,application/pdf,.doc,.docx,.txt"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
-                >
-                  Browse Files
-                </label>
-              </div>
               {uploadErrors.length > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-3">
                   <div className="flex items-center gap-2">
@@ -816,18 +824,23 @@ const HeightWorkPermit2 = (props) => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">4. Required PPE to be Used</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ppeItems.map((item) => (
-              <label key={item} className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.ppe[item] || false}
-                  onChange={(e) => handleCheckboxChange("ppe", item, e.target.checked)}
-                  className="mr-3 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-gray-800">{item}</span>
-              </label>
-            ))}
-          </div>
+          {ppeItems.map((item) => (
+            <label
+              key={item.id}
+              className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={formData.ppe[item.id] || false}
+                onChange={(e) =>
+                  handleCheckboxChange("ppe", item.id, e.target.checked)
+                }
+                className="mr-3 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-gray-800">{item.text}</span>
+            </label>
+          ))}
+        </div>
           <div className="mt-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Additional PPE (If any)</label>
             <textarea
@@ -1217,6 +1230,26 @@ const HeightWorkPermit2 = (props) => {
           </div>
           </div>
         </div>
+
+        <div style={{ display: "flex" }}>
+
+
+        <button
+  onClick={() => window.print()}
+  className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+>
+  <Printer className="w-5 h-5 mr-2" />
+  Print
+</button>
+
+<button
+  onClick={handleHoldClick}
+  className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium" style={{ marginLeft: "10px" }}
+>
+  Hold
+</button>
+</div>
+
 
         <div className="flex justify-center space-x-4">
           <button

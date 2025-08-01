@@ -12,13 +12,13 @@ const Login = () => {
   const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
-
+ 
   // Predefined users with their roles and routes
   const predefinedUsers = {
     'user': { role: 'user', route: '/login/requestuser' },
     'admin': { role: 'admin', route: '/login/requestadmin' },
-    'superadmin': { role: 'super-admin', route: '/login/requestsuperadmin' },
-    'filler': { role: 'filler', route: '/about' }
+    'superadmin': { role: 'superadmin', route: '/login/requestsuperadmin' },
+    'filler': { role: 'filler', route: '/login/option' }
   };
 
   const handleInputChange = (field, value) => {
@@ -111,14 +111,12 @@ const Login = () => {
               className={`w-full px-3 py-2 border ${
                 errors.userId ? 'border-red-300' : 'border-gray-300'
               } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="Enter: user, admin, superadmin, or filler"
+              
             />
             {errors.userId && (
               <p className="mt-1 text-sm text-red-600">{errors.userId}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">
-              Valid IDs: user, admin, superadmin, filler
-            </p>
+            
           </div>
 
           {/* Password Input */}
@@ -149,23 +147,9 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Additional Links */}
-        <div className="mt-6 text-center">
-          <Link to="/about" className="text-sm text-blue-600 hover:underline">
-            Fill the user form
-          </Link>
-        </div>
-
+      
         {/* User Guide */}
-        <div className="mt-4 p-3 bg-gray-50 rounded-md">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Test Users:</h3>
-          <ul className="text-xs text-gray-600 space-y-1">
-            <li><strong>user</strong> → User Dashboard</li>
-            <li><strong>admin</strong> → Admin Dashboard</li>
-            <li><strong>superadmin</strong> → Super Admin Dashboard</li>
-            <li><strong>filler</strong> → About Page</li>
-          </ul>
-        </div>
+       
       </div>
     </div>
   );

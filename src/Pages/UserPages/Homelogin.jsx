@@ -1,21 +1,117 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
+
 import {
   Calendar,
   MapPin,
   Users,
   FileText,
   Clock,
+  AlertTriangle,
   AlertCircle,
   Upload,
   X,
 } from "lucide-react";
+import { toast } from 'react-toastify';
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+
+import hindLogo from "../../Assets/hindimg.png";
 
 const Home2 = () => {
-  const [formData, setFormData] = useState({
-    permitDate: "",
-    permitNumber: "",
+  const navigate = useNavigate(); // Initialize navigate hook
+  
+  // Function to generate auto permit number
+  // const generatePermitNumber = () => {
+  //   const today = new Date();
+  //   const year = today.getFullYear();
+  //   const month = String(today.getMonth() + 1).padStart(2, '0');
+  //   const day = String(today.getDate()).padStart(2, '0');
+  //   const time = String(today.getHours()).padStart(2, '0') + String(today.getMinutes()).padStart(2, '0');
+  //   return `HTPL/${year}${month}${day}${time}`;
+  // };
+  useEffect(() => {
+  const fetchPermitNumber = async () => {
+    const permitNum = await generatePermitNumber();
+    setFormData((prev) => ({
+      ...prev,
+      permitNumber: permitNum,
+    }));
+  };
+
+  fetchPermitNumber();
+}, []);
+
+  const generatePermitNumber = async () => {
+  try {
+    const response = await fetch("http://localhost:4000/api/last-permit-number");
+    const data = await response.json();
+
+    // Get current financial year format e.g. "2025-26"
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const nextYear = (currentYear + 1).toString().slice(-2);
+    const financialYear = `${currentYear}-${nextYear}`;
+
+    const prefix = `HTPL/${financialYear}/`;
+
+    let lastPermit = data?.permitNumber;
+
+    if (lastPermit && lastPermit.startsWith(`HTPL/${financialYear}/`)) {
+      const lastNumberStr = lastPermit.split("/")[2]; // Get "NN"
+      const lastNumber = parseInt(lastNumberStr, 10);
+
+      if (!isNaN(lastNumber)) {
+        const nextNumber = String(lastNumber + 1).padStart(2, '0');
+        return `${prefix}${nextNumber}`;
+      }
+    }
+
+    // If no permit or new financial year
+    return `${prefix}01`;
+  } catch (error) {
+    console.error("Error generating permit number:", error);
+
+    // Default fallback
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const nextYear = (currentYear + 1).toString().slice(-2);
+    const financialYear = `${currentYear}-${nextYear}`;
+
+    return `HTPL/${financialYear}/01`;
+  }
+};
+
+
+
+  // Function to get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // Function to get date 3 days from today in YYYY-MM-DDTHH:MM format
+  const getValidUptoDate = () => {
+    const today = new Date();
+    const threeDaysLater = new Date(today);
+    threeDaysLater.setDate(today.getDate() + 3);
+    
+    // Format to YYYY-MM-DDTHH:MM (datetime-local format)
+    const year = threeDaysLater.getFullYear();
+    const month = String(threeDaysLater.getMonth() + 1).padStart(2, '0');
+    const day = String(threeDaysLater.getDate()).padStart(2, '0');
+    const hours = String(threeDaysLater.getHours()).padStart(2, '0');
+    const minutes = String(threeDaysLater.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const today = new Date().toISOString().split("T")[0];
+
+   const [formData, setFormData] = useState({
+    permitDate: getTodayDate(),
+    permitNumber:  "",
     location: "",
-    validUpto: "",
+    validUpto: getValidUptoDate(),
     fireAlarmPoint: "",
     totalWorkers: "",
     workDescription: "",
@@ -30,26 +126,6 @@ const Home2 = () => {
 
   const [loading, setLoading] = useState(false);
   const [uploadErrors, setUploadErrors] = useState([]);
-
-  // Auto-generate permit number on component mount
-  useEffect(() => {
-    const generatePermitNumber = () => {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const day = String(currentDate.getDate()).padStart(2, '0');
-      const timestamp = Date.now().toString().slice(-4); // Last 4 digits of timestamp for uniqueness
-      
-      const permitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
-      
-      setFormData(prev => ({
-        ...prev,
-        permitNumber: permitNumber
-      }));
-    };
-
-    generatePermitNumber();
-  }, []);
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -103,6 +179,16 @@ const Home2 = () => {
     }));
   };
 
+  const handleCheckboxChange = (section, item, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [item]: value,
+      },
+    }));
+  };
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -143,28 +229,147 @@ const Home2 = () => {
     return errors;
   };
 
-  // Function to simulate API submission
+  // Function to prepare FormData for API call (including files)
+  const prepareFormData = () => {
+    const apiFormData = new FormData();
+    
+    // Add text fields
+    apiFormData.append('PermitDate', formData.permitDate);
+    apiFormData.append('NearestFireAlarmPoint', formData.fireAlarmPoint || '');
+    apiFormData.append('PermitNumber', formData.permitNumber);
+    apiFormData.append('TotalEngagedWorkers', parseInt(formData.totalWorkers) || 0);
+    apiFormData.append('WorkLocation', formData.location);
+    apiFormData.append('WorkDescription', formData.workDescription);
+    apiFormData.append('PermitValidUpTo', formData.validUpto);
+    apiFormData.append('Organization', formData.contractorOrg);
+    apiFormData.append('SupervisorName', formData.supervisorName);
+    apiFormData.append('ContactNumber', formData.contactNumber);
+    
+    // Add audit fields
+    apiFormData.append('Created_by', 'User'); // You can get this from auth context
+    apiFormData.append('Updated_by', 'User');
+    
+    // Add checkbox values (scaffold safety checklist)
+    Object.entries(formData.receiverChecks).forEach(([key, value]) => {
+      apiFormData.append(key, value);
+    });
+    
+    // Add checkbox values (issuer checks)
+    Object.entries(formData.issuerChecks).forEach(([key, value]) => {
+      apiFormData.append(key, value);
+    });
+    
+    // Add PPE checkbox values
+    Object.entries(formData.ppe).forEach(([key, value]) => {
+      apiFormData.append(key, value);
+    });
+    
+    // Add files
+    formData.files.forEach((fileObj) => {
+      apiFormData.append('files', fileObj.file);
+    });
+    
+    return apiFormData;
+  };
+
+  // Function to post permit data to API with files
   const postPermitData = async () => {
+    // Validate form before submission
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      alert("Please fill in all required fields: " + validationErrors.join(", "));
+      toast.error(
+        "Please fill in all required fields: " + validationErrors.join(", ")
+      );
       return;
     }
 
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log("Permit submitted:", formData);
-      alert(`Permit ${formData.permitNumber} submitted successfully!`);
-      
-      // Reset form after successful submission
-      resetForm();
+      const formDataToSend = prepareFormData();
+
+      const response = await axios.post(
+        "http://localhost:4000/api/permits",
+        formDataToSend,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            // Optionally, show a toast for progress
+          },
+        }
+      );
+
+      console.log("Response:", response.data);
+      toast.success(`${response.data.message} (${response.data.uploadedFiles} files uploaded)`);
+
+      // Navigate to success page or dashboard after successful submission
+      // You can customize the route and pass data if needed
+      navigate('/login', { 
+        state: { 
+          permitNumber: formData.permitNumber,
+          message: response.data.message 
+        } 
+      });
+
+      // Alternative navigation options:
+      // navigate('/dashboard'); // Simple navigation
+      // navigate('/permits'); // Go to permits list
+      // navigate(-1); // Go back to previous page
+      // navigate('/permits/view/' + response.data.permitId); // Go to view permit page
+
     } catch (error) {
       console.error("Error posting permit data:", error);
-      alert("Failed to submit permit. Please try again.");
+      toast.error(
+        error.response?.data?.error ||
+        "Failed to submit permit. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to save draft (simplified version without files for now)
+  const saveDraft = async () => {
+    setLoading(true);
+
+    try {
+      const data = {
+        PermitDate: formData.permitDate,
+        NearestFireAlarmPoint: formData.fireAlarmPoint || null,
+        PermitNumber: formData.permitNumber,
+        TotalEngagedWorkers: parseInt(formData.totalWorkers) || 0,
+        WorkLocation: formData.location,
+        WorkDescription: formData.workDescription,
+        PermitValidUpTo: formData.validUpto,
+        Organization: formData.contractorOrg,
+        SupervisorName: formData.supervisorName,
+        ContactNumber: formData.contactNumber,
+        isDraft: true, // Flag to indicate this is a draft
+      };
+
+      const response = await axios.post(
+        "http://localhost:4000/api/permits/draft",
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Draft saved:", response.data);
+      toast.success("Draft saved successfully!");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast.error(
+        error.response?.data?.message ||
+        "Failed to save draft. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -179,19 +384,11 @@ const Home2 = () => {
       }
     });
     
-    // Generate new permit number when resetting
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    const timestamp = Date.now().toString().slice(-4);
-    const newPermitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
-    
     setFormData({
-      permitDate: "",
-      permitNumber: newPermitNumber,
+      permitDate: getTodayDate(),
+      permitNumber: "",
       location: "",
-      validUpto: "",
+      validUpto: getValidUptoDate(),
       fireAlarmPoint: "",
       totalWorkers: "",
       workDescription: "",
@@ -206,20 +403,87 @@ const Home2 = () => {
     setUploadErrors([]);
   };
 
-  // Function to regenerate permit number (for demonstration)
-  const regeneratePermitNumber = () => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    const timestamp = Date.now().toString().slice(-4);
-    const newPermitNumber = `HTPL/HWP/${year}${month}${day}/${timestamp}`;
-    
-    setFormData(prev => ({
-      ...prev,
-      permitNumber: newPermitNumber
-    }));
-  };
+  const receiverCheckItems = [
+    {
+      id: "ScaffoldChecked",
+      text: "Have scaffolds been checked and certified in prescribed form by scaffold supervisor?",
+    },
+    {
+      id: "ScaffoldTagged",
+      text: "Have scaffolds been tagged with green card duly filled and signed by scaffold supervisor?",
+    },
+    {
+      id: "ScaffoldRechecked",
+      text: "Is scaffold rechecked and re-certified weekly?",
+    },
+    {
+      id: "ScaffoldErected",
+      text: "Is scaffold erected on firm ground and sole plate and base plate have been used?",
+    },
+    {
+      id: "HangingBaskets",
+      text: "Are the hanging baskets used of proper construction, tested and certified for the purpose?",
+    },
+    {
+      id: "PlatformSafe",
+      text: "Is the work platform made free of hazards of all traps/trips/slips and fall?",
+    },
+    {
+      id: "CatLadders",
+      text: "Have cat ladders, crawling boards etc been used for safe working at sloping roof?",
+    },
+    {
+      id: "EdgeProtection",
+      text: "Has edge protection provided against fall from roof/elevated space?",
+    },
+  ];
+
+  const issuerCheckItems = [
+    {
+      id: "Platforms",
+      text: "Are the platforms been provided with Toe board, guardrail and area below is barricaded?",
+    },
+    {
+      id: "SafetyHarness",
+      text: "Checked whether safety harness and necessary arrangement for tying the lifeline, fall arresters etc provided to the worker for working at height?",
+    },
+    {
+      id: "EnergyPrecautions",
+      text: "Have precautions been listed below for safe working at height for source of energy Such as electricity?",
+    },
+    {
+      id: "Illumination",
+      text: "Is the raised work surface properly illuminated?",
+    },
+    {
+      id: "UnguardedAreas",
+      text: "Are the workers working near unguarded shafts, excavations or hot line?",
+    },
+    {
+      id: "FallProtection",
+      text: "Checked for provision of collective fall protection such as safety net?",
+    },
+    {
+      id: "AccessMeans",
+      text: "Are proper means of access to the scaffold including use of standard aluminium ladder provided?",
+    },
+  ];
+
+  const ppeItems = [
+    { id: "SafetyHelmet", text: "Safety Helmet" },
+    { id: "SafetyJacket", text: "Safety Jacket" },
+    { id: "SafetyShoes", text: "Safety Shoes" },
+    { id: "Gloves", text: "Gloves" },
+    { id: "SafetyGoggles", text: "Safety Goggles" },
+    { id: "FaceShield", text: "Face Shield" },
+    { id: "DustMask", text: "Dust Mask" },
+    { id: "EarPlugEarmuff", text: "Ear plug/Earmuff" },
+    { id: "AntiSlipFootwear", text: "Anti Slip footwear" },
+    { id: "SafetyNet", text: "Safety Net" },
+    { id: "AnchorPointLifelines", text: "Anchor Point/Lifelines" },
+    { id: "SelfRetractingLifeline", text: "Self retracting Lifeline (SRL)" },
+    { id: "FullBodyHarness", text: "Full body harness with lanyard or shock absorbers" },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -228,8 +492,11 @@ const Home2 = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center space-x-2">
-           
-             
+              <img
+                src={hindLogo}
+                alt="Hind Logo"
+                className="h-12 w-auto object-contain"
+              />
             </div>
             <div className="text-right text-sm text-gray-600">
               <div>Doc. No.: HTPL/OHS/23</div>
@@ -239,7 +506,7 @@ const Home2 = () => {
           </div>
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">
-              HEIGHT WORK PERMIT
+               WORK PERMIT
             </h1>
           </div>
           <div className="text-center text-gray-700 leading-relaxed">
@@ -260,66 +527,70 @@ const Home2 = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
+                 <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Permit Number (Auto-generated)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={formData.permitNumber}
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed focus:outline-none"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" title="Auto-generated"></div>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <p className="text-xs text-gray-500">
-                    This permit number is automatically generated and cannot be modified
-                  </p>
-                  <button
-                    type="button"
-                    onClick={regeneratePermitNumber}
-                    className="text-xs text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Regenerate
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Date of Permit to Work *
-                </label>
-                <input
-                  type="date"
-                  value={formData.permitDate}
-                  onChange={(e) =>
-                    handleInputChange("permitDate", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <MapPin className="w-4 h-4 inline mr-1" />
-                  Location of Work *
+                  Permit Number *
                 </label>
                 <input
                   type="text"
-                  value={formData.location}
+                  value={formData.permitNumber}
                   onChange={(e) =>
-                    handleInputChange("location", e.target.value)
+                    handleInputChange("permitNumber", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
                   required
+                  readOnly
                 />
+                <p className="text-xs text-gray-500 mt-1">Auto-generated permit number</p>
               </div>
+
+              <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Nearest Fire Alarm Point *
+    </label>
+    <select
+      value={formData.fireAlarmPoint}
+      onChange={(e) => handleInputChange("fireAlarmPoint", e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    >
+      <option value="">-- Select Fire Alarm Point --</option>
+      <option value="Main Gate">Main Gate</option>
+      <option value="Dockyard Office">Dockyard Office</option>
+      <option value="Warehouse A">Warehouse A</option>
+      <option value="Warehouse B">Warehouse B</option>
+      <option value="Container Yard">Container Yard</option>
+      <option value="Fuel Station">Fuel Station</option>
+      <option value="Maintenance Shed">Maintenance Shed</option>
+      <option value="Cranes Zone">Cranes Zone</option>
+    </select>
+  </div>
+
+              <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    <MapPin className="w-4 h-4 inline mr-1" />
+    Location of Work *
+  </label>
+  <select
+    value={formData.location}
+    onChange={(e) => handleInputChange("location", e.target.value)}
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    required
+  >
+    <option value="">-- Select Location --</option>
+    <option value="Main Dock">Main Dock</option>
+    <option value="Dry Dock">Dry Dock</option>
+    <option value="Cargo Handling Area">Cargo Handling Area</option>
+    <option value="Maintenance Bay">Maintenance Bay</option>
+    <option value="Electrical Room">Electrical Room</option>
+    <option value="Crane Operating Zone">Crane Operating Zone</option>
+    <option value="Fuel Storage Area">Fuel Storage Area</option>
+    <option value="Workshop 1">Workshop 1</option>
+    <option value="Workshop 2">Workshop 2</option>
+    <option value="Security Post">Security Post</option>
+  </select>
+</div>
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -332,43 +603,55 @@ const Home2 = () => {
                   onChange={(e) =>
                     handleInputChange("validUpto", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
                   required
+                  readOnly
                 />
+                <p className="text-xs text-gray-500 mt-1">Set to 3 days from today</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nearest Fire Alarm Point
-                </label>
-                <input
-                  type="text"
-                  value={formData.fireAlarmPoint}
-                  onChange={(e) =>
-                    handleInputChange("fireAlarmPoint", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+             <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    <Calendar className="w-4 h-4 inline mr-1" />
+    Date of Permit to Work *
+  </label>
+  <input
+    type="date"
+    value={formData.permitDate || today}
+    onChange={(e) =>
+      handleInputChange("permitDate", e.target.value)
+    }
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+    required
+  />
+  <p className="text-xs text-gray-500 mt-1">Default set to today, editable</p>
+</div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Users className="w-4 h-4 inline mr-1" />
-                  Total Number of Engaged Workers *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={formData.totalWorkers}
-                  onChange={(e) =>
-                    handleInputChange("totalWorkers", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    <Users className="w-4 h-4 inline mr-1" />
+    Total Number of Engaged Workers *
+  </label>
+  <input
+    type="number"
+    min="1"
+    max="999"
+    value={formData.totalWorkers}
+    onChange={(e) => {
+      const value = parseInt(e.target.value, 10);
+      if (value >= 1 && value <= 999) {
+        handleInputChange("totalWorkers", value);
+      } else if (e.target.value === "") {
+        handleInputChange("totalWorkers", "");
+      }
+    }}
+    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    required
+  />
+</div>
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -421,22 +704,32 @@ const Home2 = () => {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contact Number *
-                </label>
-                <input
-                  type="tel"
-                  value={formData.contactNumber}
-                  onChange={(e) =>
-                    handleInputChange("contactNumber", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  pattern="[0-9]{10}"
-                  placeholder="10-digit mobile number"
-                  required
-                />
-              </div>
+             <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contact Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.contactNumber}
+                    onChange={(e) => {
+                      // Only allow numeric values
+                      const numericValue = e.target.value.replace(/\D/g, "");
+                      if (numericValue.length <= 10) {
+                        handleInputChange("contactNumber", numericValue);
+                      }
+                    }}
+                    onInput={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10); // Force only digits and max 10 length
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    pattern="\d{10}"
+                    placeholder="10-digit mobile number"
+                    maxLength="10"
+                    minLength="10"
+                    required
+                  />
+                </div>
+
             </div>
           </div>
 
@@ -553,14 +846,10 @@ const Home2 = () => {
           </div>
         </div>
 
+        
+
         {/* Action Buttons */}
         <div className="flex justify-center space-x-4 pb-8">
-          <button
-            onClick={() => resetForm()}
-            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-          >
-            Reset Form
-          </button>
           <button
             onClick={postPermitData}
             disabled={loading}

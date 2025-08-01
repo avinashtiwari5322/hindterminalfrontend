@@ -28,9 +28,9 @@ const SidebarNavbar = ({ children }) => {
   };
 
   const menuItems = [
-    { icon: Home, label: "Dashboard", href: "/" },
-    { icon: BarChart3, label: "Analytics", href: "/about", badge: "23" },
-    { icon: BarChart3, label: "Approvals", href: "/Approval", badge: "23" },
+    
+    { icon: BarChart3, label: "Work Permit", href: "/about",  },
+    { icon: BarChart3, label: "Approvals", href: "/Approval",  },
   ];
 
   return (
