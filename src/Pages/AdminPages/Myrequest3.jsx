@@ -30,7 +30,7 @@ const MyRequests3 = () => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://hindterminalfrontend.vercel.app/api/permits');
+        const response = await fetch('https://hindterminal56.onrender.com/api/permits');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -241,7 +241,7 @@ const MyRequests3 = () => {
                             return {
                               ...file,
                               // Use the FileID to create the correct URL for database-stored files
-                              url: file.FileID && !isNaN(file.FileID) ? `https://hindterminalfrontend.vercel.app/api/permits/file/${file.FileID}` : undefined
+                              url: file.FileID && !isNaN(file.FileID) ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined
                             };
                           }));
                         } else {

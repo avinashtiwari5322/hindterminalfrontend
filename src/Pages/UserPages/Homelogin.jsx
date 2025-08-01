@@ -43,7 +43,7 @@ const Home2 = () => {
 
   const generatePermitNumber = async () => {
   try {
-    const response = await fetch("https://hindterminalfrontend.vercel.app/api/last-permit-number");
+    const response = await fetch("https://hindterminal56.onrender.com/api/last-permit-number");
     const data = await response.json();
 
     // Get current financial year format e.g. "2025-26"
@@ -289,7 +289,7 @@ const Home2 = () => {
       const formDataToSend = prepareFormData();
 
       const response = await axios.post(
-        "https://hindterminalfrontend.vercel.app/api/permits",
+        "https://hindterminal56.onrender.com/api/permits",
         formDataToSend,
         {
           headers: {
@@ -353,7 +353,7 @@ const Home2 = () => {
       };
 
       const response = await axios.post(
-        "https://hindterminalfrontend.vercel.app/api/permits/draft",
+        "https://hindterminal56.onrender.com/api/permits/draft",
         data,
         {
           headers: {
