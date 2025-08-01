@@ -79,7 +79,7 @@ const HeightWorkPermit3 = (props) => {
   }
   useEffect(() => {
     if (isAdminView && id) {
-      fetch(`http://localhost:4000/api/permits/${id}`)
+      fetch(`https://hindterminalfrontend.vercel.app/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
           setFormData((prev) => ({
@@ -165,8 +165,8 @@ const HeightWorkPermit3 = (props) => {
               name: file.FileName || file.originalName,
               size: file.FileSize || file.size,
               type: file.FileType || file.mimetype,
-              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
+              url: file.FilePath ? `https://hindterminalfrontend.vercel.app/api/permits/file/${file.FileID}` : undefined,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminalfrontend.vercel.app/api/permits/file/${file.FileID}` : null,
             })),
           }));
         })
@@ -408,7 +408,7 @@ const HeightWorkPermit3 = (props) => {
         }
       });
 
-      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
+      const response = await fetch(`https://hindterminalfrontend.vercel.app/api/permits/${id}`, {
         method: "put",
         body: form,
       });
