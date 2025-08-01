@@ -7,7 +7,7 @@ import Login from "./Pages/Login";
 import Home2 from "./Pages/Login";
 import HeightWorkPermit2 from "./Pages/UserPages/Homepage3";
 import Approval from "./Pages/AdminPages/Approval";
-import { useNavigate } from "react-router-dom";
+
 import ProtectedRoute from "./ProtectedRoute";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
