@@ -165,11 +165,7 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Debug Info for Production */}
-        <div className="mt-4 text-xs text-gray-500">
-          <p>Valid User IDs: user, admin, superadmin, filler</p>
-          <p>Min password length: 6 characters</p>
-        </div>
+        
       </div>
     </div>
   );

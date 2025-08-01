@@ -16,6 +16,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 import hindLogo from "../../Assets/hindimg.png";
+import { Printer } from "lucide-react";
 
 const Home2 = () => {
   const navigate = useNavigate(); // Initialize navigate hook
@@ -572,6 +573,8 @@ const Home2 = () => {
             </div>
           </div>
 
+          
+
           {/* File Upload Section */}
           <div className="mt-6 bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -683,6 +686,9 @@ const Home2 = () => {
               )}
             </div>
           </div>
+          
+   
+
         </div>
 
         
@@ -702,7 +708,14 @@ const Home2 = () => {
             ) : (
               "Submit for Approval"
             )}
-          </button>
+          </button>         <button
+  onClick={() => window.print()}
+  className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+>
+  <Printer className="w-5 h-5 mr-2" />
+  Print
+</button>
+
         </div>
       </div>
     </div>

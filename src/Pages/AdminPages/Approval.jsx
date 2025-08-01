@@ -84,7 +84,7 @@ const MyRequests = () => {
     if (expiryDate < now) {
       return "Expired";
     } else {
-      return "Active";
+      return "Hold";
     }
   };
 
