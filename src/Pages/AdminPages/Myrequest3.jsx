@@ -27,10 +27,10 @@ const MyRequests3 = () => {
   const { userId } = useParams();
   let fetchUrl = '';
   if(userId) {
-    fetchUrl = `http://localhost:4000/api/permits?UserId=${userId}`;
+    fetchUrl = `https://hindterminal56.onrender.com/api/permits?UserId=${userId}`;
   }
   else {
-    fetchUrl = `http://localhost:4000/api/permits`;
+    fetchUrl = `https://hindterminal56.onrender.com/api/permits`;
   }
   
 
@@ -250,7 +250,7 @@ const MyRequests3 = () => {
                             return {
                               ...file,
                               // Use the FileID to create the correct URL for database-stored files
-                              url: file.FileID && !isNaN(file.FileID) ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined
+                              url: file.FileID && !isNaN(file.FileID) ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined
                             };
                           }));
                         } else {
