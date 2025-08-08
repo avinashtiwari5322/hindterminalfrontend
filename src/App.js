@@ -15,6 +15,7 @@ import MyRequests from "./Pages/AdminPages/Approval";
 import MyRequests2 from "./Pages/AdminPages/Myrequest2";
 import MyRequests3 from "./Pages/AdminPages/Myrequest3";
 import PermitOptions from "./Pages/UserPages/Option";
+import ViewPermit from "./Pages/UserPages/ViewPermit";
 import { AuthProvider } from "./AuthContext"; // Make sure this import exists
 
 function App() {
@@ -38,7 +39,8 @@ function App() {
           
           {/* Routes WITH Sidebar layout */}
           <Route element={<SidebarNavbar />}>
-            <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+            <Route path="/about/:userId" element={<ProtectedRoute><About /></ProtectedRoute>} />
+            <Route path="/ViewPermit/:id" element={<ProtectedRoute><ViewPermit /></ProtectedRoute>} />
             <Route path="/Home" element={<ProtectedRoute><Home2 /></ProtectedRoute>} />
             <Route path="/Approval" element={<ProtectedRoute><Approval /></ProtectedRoute>} />
             <Route path="/approval/:id" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -47,7 +49,8 @@ function App() {
             <Route path="/login/requestuser" element={<ProtectedRoute><MyRequests/></ProtectedRoute>} />
             <Route path="/login/option" element={<ProtectedRoute><PermitOptions/></ProtectedRoute>} />
             <Route path="/login/requestadmin" element={<ProtectedRoute><MyRequests2 /></ProtectedRoute>} />
-            <Route path="/login/requestsuperadmin" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
+            <Route path="/login/requestsuperadmin/:userId" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
+            <Route path="/login/requestsuperadmin/" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
           </Route>
         </Routes>
       </Router>

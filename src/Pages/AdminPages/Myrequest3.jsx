@@ -11,6 +11,7 @@ import {
 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const MyRequests3 = () => {
   const [statusFilter, setStatusFilter] = useState("All");
@@ -23,13 +24,22 @@ const MyRequests3 = () => {
   const [actionMenuId, setActionMenuId] = useState(null);
   // Add state to track selected request's files
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const { userId } = useParams();
+  let fetchUrl = '';
+  if(userId) {
+    fetchUrl = `http://localhost:4000/api/permits?UserId=${userId}`;
+  }
+  else {
+    fetchUrl = `http://localhost:4000/api/permits`;
+  }
+  
 
   // Fetch data from API
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://hindterminal56.onrender.com/api/permits');
+        const response = await fetch(fetchUrl);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -240,7 +250,7 @@ const MyRequests3 = () => {
                             return {
                               ...file,
                               // Use the FileID to create the correct URL for database-stored files
-                              url: file.FileID && !isNaN(file.FileID) ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined
+                              url: file.FileID && !isNaN(file.FileID) ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined
                             };
                           }));
                         } else {
@@ -344,7 +354,8 @@ const MyRequests3 = () => {
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                           onClick={e => {
                             e.stopPropagation();
-                            navigate(`/approval2/${request.id}`);
+                            const path = userId ? `/ViewPermit/${request.id}` : `/approval2/${request.id}`;
+                            navigate(path);
                           }}
                         >
                           View

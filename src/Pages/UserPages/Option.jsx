@@ -8,15 +8,17 @@ const PermitOptions = () => {
     // You can navigate to check status page here
     console.log('Navigate to check permit status');
   };
+  const userId = "1"; 
 
   const handleApplyNew = () => {
     // Navigate to /about page
-    window.location.href = '/about';
+    // window.location.href = `/about/:${userId}`;
+    navigate(`/about/${userId}`);
   };
 
   const handlechangeapproval = () => {
     console.log('Navigate to approval page');
-    navigate('/login/requestsuperadmin');
+    navigate(`/login/requestsuperadmin/${userId}`);
 
   }
 
