@@ -7,10 +7,10 @@ const Login = () => {
   const [formData, setFormData] = useState({
     userId: '',
     password: '',
+    locationId: ''
   });
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
  
@@ -44,17 +44,17 @@ const Login = () => {
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
+    if (!formData.locationId) {
+      newErrors.locationId = 'Please select a location';
+    }
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setIsLoading(false);
       return;
     }
 
@@ -63,30 +63,20 @@ const Login = () => {
     
     if (!userConfig) {
       setLoginError('Invalid User ID. Please use: user, admin, superadmin, or filler');
-      setIsLoading(false);
       return;
     }
 
     try {
-      // For demo purposes, accept any password for predefined users
-      // In production, you'd validate against a real backend
-      if (formData.password.length >= 6) {
-        // Call the login function from context
-        if (login) {
-          await login(formData.userId, formData.password, userConfig.role);
-        }
-        
-        // Navigate based on the user's predefined route
-        console.log('Navigating to:', userConfig.route); // Debug log
-        navigate(userConfig.route, { replace: true });
+      // Simulate login with role information
+      const success = await login(formData.userId, formData.password, userConfig.role);
+      
+      if (success || (formData.userId && formData.password)) {
+        navigate(userConfig.route);
       } else {
-        setLoginError('Password must be at least 6 characters');
+        setLoginError('Invalid credentials');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setLoginError('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      navigate(userConfig.route);
     }
   };
 
@@ -123,13 +113,13 @@ const Login = () => {
               className={`w-full px-3 py-2 border ${
                 errors.userId ? 'border-red-300' : 'border-gray-300'
               } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="Enter user ID "
-              disabled={isLoading}
             />
             {errors.userId && (
               <p className="mt-1 text-sm text-red-600">{errors.userId}</p>
             )}
           </div>
+
+         
 
           {/* Password Input */}
           <div>
@@ -145,27 +135,43 @@ const Login = () => {
                 errors.password ? 'border-red-300' : 'border-gray-300'
               } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               placeholder="Enter your password"
-              disabled={isLoading}
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
             )}
           </div>
 
+           {/* Location Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location
+            </label>
+            <select
+              value={formData.locationId}
+              onChange={(e) => handleInputChange('locationId', e.target.value)}
+              className={`w-full px-3 py-2 border ${
+                errors.locationId ? 'border-red-300' : 'border-gray-300'
+              } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            >
+              <option value="">-- Select Location --</option>
+              <option value="palwal">Palwal</option>
+              <option value="delhi">Delhi</option>
+              <option value="faridabad">Faridabad</option>
+              <option value="gurugram">Gurugram</option>
+              <option value="noida">Noida</option>
+            </select>
+            {errors.locationId && (
+              <p className="mt-1 text-sm text-red-600">{errors.locationId}</p>
+            )}
+          </div>
+
           <button
             onClick={handleSubmit}
-            disabled={isLoading}
-            className={`w-full px-6 py-3 ${
-              isLoading 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            } text-white rounded-lg transition-colors font-medium`}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            Sign In
           </button>
         </div>
-
-        
       </div>
     </div>
   );
