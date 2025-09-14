@@ -50,7 +50,7 @@ const MyRequests = () => {
           contactNumber: permit.ContactNumber,
           nearestFireAlarmPoint: permit.NearestFireAlarmPoint,
           // Since the API doesn't have status field, we'll determine it based on dates
-          status: determineStatus(permit.PermitValidUpTo),
+          status: permit.CurrentPermitStatus,
           createdOn: permit.Created_on,
           updatedOn: permit.Updated_on,
           files: permit.Files || [] // Files array from the API
@@ -283,64 +283,21 @@ const MyRequests = () => {
                         </div>
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
-                        {request.status === "Active" || request.status === "Expired" ? (
-                          <div className="relative">
-                            <button
-                              className={`px-2 py-1 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                                request.status === "Active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                              onClick={e => {
-                                e.stopPropagation();
-                                setActionMenuId(request.id);
-                              }}
-                            >
-                              {request.status}
-                            </button>
-                            {actionMenuId === request.id && (
-                              <div className="absolute z-10 mt-2 right-0 bg-white border border-gray-200 rounded shadow-lg w-32">
-                                <button
-                                  className="block w-full text-left px-4 py-2 hover:bg-blue-50 text-blue-700"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleStatusChange(request.id, "Approved");
-                                    setActionMenuId(null);
-                                  }}
-                                >Approve</button>
-                                <button
-                                  className="block w-full text-left px-4 py-2 hover:bg-red-50 text-red-700"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleStatusChange(request.id, "Rejected");
-                                    setActionMenuId(null);
-                                  }}
-                                >Reject</button>
-                                <button
-                                  className="block w-full text-left px-4 py-2 hover:bg-yellow-50 text-yellow-700"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    // Optionally, navigate to edit page
-                                    navigate(`/approval/${request.id}/edit`);
-                                    setActionMenuId(null);
-                                  }}
-                                >Edit</button>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span
-                            className={`px-2 py-1 rounded-full text-sm font-medium ${
-                              request.status === "Approved"
-                                ? "bg-green-100 text-green-700"
-                                : request.status === "Rejected"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {request.status}
-                          </span>
-                        )}
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm font-medium ${
+                            request.status === "Approved"
+                              ? "bg-green-100 text-green-700"
+                              : request.status === "Rejected"
+                              ? "bg-red-100 text-red-700"
+                              : request.status === "Expired"
+                              ? "bg-red-100 text-red-700"
+                              : request.status === "Active"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {request.status}
+                        </span>
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
                         <button

@@ -50,6 +50,7 @@ const Login = () => {
     return newErrors;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -58,27 +59,103 @@ const Login = () => {
       return;
     }
 
-    // Check if the user ID matches one of our predefined users
-    const userConfig = predefinedUsers[formData.userId.toLowerCase()];
-    
-    if (!userConfig) {
-      setLoginError('Invalid User ID. Please use: user, admin, superadmin, or filler');
-      return;
-    }
-
     try {
-      // Simulate login with role information
-      const success = await login(formData.userId, formData.password, userConfig.role);
-      
-      if (success || (formData.userId && formData.password)) {
-        navigate(userConfig.route);
-      } else {
-        setLoginError('Invalid credentials');
+      // Call your backend login API
+      const response = await fetch("https://hindterminal56.onrender.com/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          UserName: formData.userId,
+          Password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setLoginError(data.message || "Invalid credentials");
+        return;
+      }
+
+      // ✅ Store user details in localStorage for future use
+      localStorage.setItem("user", JSON.stringify(data.data));
+      localStorage.setItem("isAuthenticated", "true");
+      console.log(data.data);
+      // Decide route based on RoleName
+      switch (data.data.RoleName.toLowerCase()) {
+        case "user":
+          navigate("/login/requestuser");
+          break;
+        case "admin":
+          navigate("/login/requestadmin");
+          break;
+        case "superadmin":
+          navigate("/login/requestsuperadmin");
+          break;
+        case "filler":
+          navigate("/login/option");
+          break;
+        default:
+          navigate("/dashboard"); // fallback if role is unknown
       }
     } catch (error) {
-      navigate(userConfig.route);
+      console.error("Login error:", error);
+      setLoginError("Something went wrong. Please try again.");
     }
   };
+
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   const validationErrors = validateForm();
+//   if (Object.keys(validationErrors).length > 0) {
+//     setErrors(validationErrors);
+//     return;
+//   }
+
+//   try {
+//     // Call your backend login API
+//     const response = await fetch("https://hindterminal56.onrender.com/api/login", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         UserName: formData.userId,
+//         Password: formData.password,
+//       }),
+//     });
+
+//     const data = await response.json();
+
+//     if (!response.ok || !data.success) {
+//       setLoginError(data.message || "Invalid credentials");
+//       return;
+//     }
+
+//     // ✅ Store user details in localStorage for future use
+//     localStorage.setItem("user", JSON.stringify(data.data));
+
+//     // Decide route based on RoleName
+//     switch (data.data.RoleName.toLowerCase()) {
+//       case "user":
+//         navigate("/login/requestuser");
+//         break;
+//       case "admin":
+//         navigate("/login/requestadmin");
+//         break;
+//       case "superadmin":
+//         navigate("/login/requestsuperadmin");
+//         break;
+//       case "filler":
+//         navigate("/login/option");
+//         break;
+//       default:
+//         navigate("/dashboard"); // fallback if role is unknown
+//     }
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     setLoginError("Something went wrong. Please try again.");
+//   }
+// };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

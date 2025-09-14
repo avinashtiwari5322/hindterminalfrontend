@@ -68,19 +68,57 @@ const HeightWorkPermit3 = (props) => {
     REASON: ""
   });
   const [uploadErrors, setUploadErrors] = useState([]);
-  
+  const [adminDocuments, setAdminDocuments] = useState([]);
+  const [adminUploadLoading, setAdminUploadLoading] = useState(false);
 
   const navigate = useNavigate()
 
-  const approval = ()=>{
-    toast.success('approved')
-    navigate('/login')
-  }
+
+  // Approve API call
+  const approval = async () => {
+    try {
+      const response = await fetch('https://hindterminal56.onrender.com/api/permits/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ PermitId: Number(id) })
+      });
+      if (!response.ok) throw new Error('Failed to approve permit');
+      toast.success('Permit approved');
+      navigate('/login');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // Close API call
+  const closePermit = async () => {
+    try {
+      const response = await fetch('https://hindterminal56.onrender.com/api/permits/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ PermitId: Number(id) })
+      });
+      if (!response.ok) throw new Error('Failed to close permit');
+      toast.success('Permit closed');
+      navigate('/login');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+  
   useEffect(() => {
     if (isAdminView && id) {
       fetch(`https://hindterminal56.onrender.com/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
+          // If AdminDocuments present, flatten and set
+          if (data.AdminDocuments && Array.isArray(data.AdminDocuments) && data.AdminDocuments.length > 0) {
+            // Flatten if nested array (as per your API response)
+            const flatDocs = Array.isArray(data.AdminDocuments[0]) ? data.AdminDocuments.flat() : data.AdminDocuments;
+            setAdminDocuments(flatDocs);
+          } else {
+            setAdminDocuments([]);
+          }
           setFormData((prev) => ({
             ...prev,
             permitDate: data.PermitDate ? data.PermitDate.split("T")[0] : "",
@@ -943,85 +981,62 @@ const HeightWorkPermit3 = (props) => {
               
             </table>
 
-            
-                            <div className="space-y-4">
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 mb-2">Click to upload files or drag and drop</p>
-                            <p className="text-sm text-gray-500 mb-4">Maximum file size: 4MB per file • Supported formats: Images, PDF, DOC, DOCX, TXT</p>
-                            <input
-                              type="file"
-                              name="files"
-                              multiple
-                              onChange={handleFileUpload}
-                              className="hidden"
-                              id="file-upload"
-                              accept="image/*,application/pdf,.doc,.docx,.txt"
-                            />
-                            <label
-                              htmlFor="file-upload"
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
-                            >
-                              Browse Files
-                            </label>
-                          </div>
-                          {uploadErrors.length > 0 && (
-                            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
-                                <h4 className="text-sm font-medium text-red-800">Upload Errors</h4>
-                              </div>
-                              <ul className="mt-2 text-sm text-red-700">
-                                {uploadErrors.map((error, index) => (
-                                  <li key={index}>• {error}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {formData.files.length > 0 && (
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-medium text-gray-700">Uploaded Files ({formData.files.length})</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {formData.files.map((fileObj) => (
-                                  <div key={fileObj.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
-                                    {fileObj.preview && fileObj.type && fileObj.type.startsWith("image/") ? (
-                                      <img src={fileObj.preview} alt={fileObj.name} className="w-12 h-12 object-cover rounded" />
-                                    ) : fileObj.url && fileObj.type && fileObj.type.startsWith("image/") ? (
-                                      <img src={fileObj.url} alt={fileObj.name} className="w-12 h-12 object-cover rounded" />
-                                    ) : (
-                                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                        <FileText className="w-6 h-6 text-gray-500" />
-                                      </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-gray-900 truncate">{fileObj.name}</p>
-                                      <p className="text-xs text-gray-500">{formatFileSize(fileObj.size)}</p>
-                                      {(fileObj.preview || fileObj.url) && (
-                                        <a
-                                          href={fileObj.preview || fileObj.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:underline text-xs mt-1 inline-block"
-                                        >
-                                          View
-                                        </a>
-                                      )}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => removeFile(fileObj.id)}
-                                      className="p-1 text-red-500 hover:text-red-700 transition-colors"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                ))}
+            {isAdminView && (
+              <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  Admin Documents
+                </h4>
+                <div className="space-y-4">
+                  {/* Upload option removed for admin view-only mode */}
+                  {adminDocuments.length > 0 ? (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700">Uploaded Files ({adminDocuments.length})</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {adminDocuments.map((doc, idx) => {
+                          const fileName = doc.FileName || doc.originalName || 'File';
+                          const fileSize = doc.FileSize || doc.size;
+                          const fileType = doc.FileType || doc.mimetype || '';
+                          const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                          return (
+                            <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                              {fileType.startsWith("image/") ? (
+                                <img
+                                  src={fileUrl}
+                                  alt={fileName}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                                  <FileText className="w-6 h-6 text-gray-500" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{fileName}</p>
+                                {/* <p className="text-xs text-gray-500">
+                                  {fileSize ? formatFileSize(fileSize) : ''}
+                                </p>
+                                <p className="text-xs text-gray-500">{fileType}</p> */}
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline text-xs mt-1 inline-block"
+                                >
+                                  View
+                                </a>
                               </div>
                             </div>
-                          )}
-                        </div>
-
-            
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-xs mt-2">No admin documents uploaded yet.</div>
+                  )}
+                </div>
+              </div>
+            )}
             
                                      <div className="mt-6">
             <label className="block text-md font-medium text-gray-700 mb-2">Reason</label>
@@ -1040,7 +1055,7 @@ const HeightWorkPermit3 = (props) => {
             >
             Approve
             </button>      <button 
-              onClick={() => window.location.reload()} 
+              onClick={closePermit}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Closer

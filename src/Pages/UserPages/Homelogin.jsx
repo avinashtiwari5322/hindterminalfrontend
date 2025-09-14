@@ -242,6 +242,7 @@ const Home2 = () => {
     apiFormData.append('Organization', formData.contractorOrg);
     apiFormData.append('SupervisorName', formData.supervisorName);
     apiFormData.append('ContactNumber', formData.contactNumber);
+    apiFormData.append('Status', formData.status || 'Active');
     
     // Add audit fields
     apiFormData.append('Created_by', 'User'); // You can get this from auth context

@@ -11,21 +11,48 @@ import {
   Grid3x3,
 } from "lucide-react";
 import hindLogo from '../Assets/hindimg.png';
-import { Link } from "react-router-dom"; // Add this import
+
+import { Link, useNavigate } from "react-router-dom";
 
 import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
 const SidebarNavbar = ({ children }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
+
+  // Get user from localStorage
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user'));
+  } catch (e) {
+    user = null;
+  }
+  const userId = user?.UserId; 
+
+  // Conditionally render menu items
   const menuItems = [
-    
-    { icon: BarChart3, label: "Work Permit", href: "/about",  },
-    { icon: BarChart3, label: "Approvals", href: "/Approval",  },
+    // Only show Work Permit if user is a 'filler'
+    ...(user && user.RoleName === 'filler' ? [
+      { icon: BarChart3, label: "Work Permit", href: `/about/${userId}` },
+    ] : []),
+    ...(user && user.RoleName === 'filler' ? [
+      { icon: BarChart3, label: "Check Status", href: `/login/requestsuperadmin/${userId}` },
+    ] : []),
+    // Only show Approvals if user is not a 'filler'
+    ...(user && user.RoleName === 'filler' ? [] : [
+      { icon: BarChart3, label: "Approvals", href: "/Approval" },
+    ]),
   ];
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex flex-col">
@@ -174,21 +201,23 @@ const SidebarNavbar = ({ children }) => {
 
             {/* Sidebar Footer */}
             <div className="p-4 border-t border-slate-700">
-              <div
-                className={`transition-all duration-300 ${
-                  isOpen ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-700">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
+              <div className={`transition-all duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-700">
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">{user?.UserName || user?.name || 'User'}</p>
+                      <p className="text-sm text-slate-400">{user?.Email || user?.email || 'no-email'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-white">John Doe</p>
-                    <p className="text-sm text-slate-400">
-                      john@hindterminals.com
-                    </p>
-                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="mt-2 w-full flex items-center justify-center gap-2 p-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200"
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
             </div>

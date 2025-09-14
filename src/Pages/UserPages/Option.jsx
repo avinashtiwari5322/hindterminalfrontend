@@ -8,7 +8,14 @@ const PermitOptions = () => {
     // You can navigate to check status page here
     console.log('Navigate to check permit status');
   };
-  const userId = "1"; 
+  
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem('user'));
+  } catch (e) {
+    user = null;
+  }
+  const userId = user?.UserId; 
 
   const handleApplyNew = () => {
     // Navigate to /about page
