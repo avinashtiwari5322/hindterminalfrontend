@@ -488,11 +488,11 @@ const HeightWorkPermit = (props) => {
             <div className="flex items-center space-x-2">
               <img src={hindLogo} alt="Hind Logo" className="h-12 w-auto object-contain" />
             </div>
-            <div className="text-right text-sm text-gray-600">
+            {/* <div className="text-right text-sm text-gray-600">
               <div>Doc. No.: HTPL/OHS/23</div>
               <div>Eff. Date: 02.01.24</div>
               <div>Rev. No. & Date 00</div>
-            </div>
+            </div> */}
           </div>
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-4"> WORK PERMIT</h1>
