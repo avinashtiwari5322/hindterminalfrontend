@@ -17,6 +17,13 @@ import MyRequests3 from "./Pages/AdminPages/Myrequest3";
 import PermitOptions from "./Pages/UserPages/Option";
 import ViewPermit from "./Pages/UserPages/ViewPermit";
 import { AuthProvider } from "./AuthContext"; // Make sure this import exists
+import HomepageHot from "./Pages/UserPages/HomepageHot";
+import HomepageElectric from "./Pages/UserPages/HomepageElectric";
+import HomepageNormal from "./Pages/UserPages/HomepageNormal";
+import PermitDetails from "./Pages/UserPages/PermitDetails";
+import SuperUserPage from "./Pages/UserPages/SuperUserPage";
+import MasterData from "./Pages/UserPages/MasterData";
+
 
 function App() {
   return (
@@ -43,14 +50,23 @@ function App() {
             <Route path="/ViewPermit/:id" element={<ProtectedRoute><ViewPermit /></ProtectedRoute>} />
             <Route path="/Home" element={<ProtectedRoute><Home2 /></ProtectedRoute>} />
             <Route path="/Approval" element={<ProtectedRoute><Approval /></ProtectedRoute>} />
-            <Route path="/approval/:id" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/approval/:id" element={<ProtectedRoute><PermitDetails /></ProtectedRoute>} />
+            {/* <Route path="/approval/:id" element={<ProtectedRoute><Home /></ProtectedRoute>} /> */}
             <Route path="/approval2/:id" element={<ProtectedRoute><HeightWorkPermit2 /></ProtectedRoute>} />
             <Route path="/approval3/:id" element={<ProtectedRoute><HeightWorkPermit3 /></ProtectedRoute>} />
             <Route path="/login/requestuser" element={<ProtectedRoute><MyRequests/></ProtectedRoute>} />
+            <Route path="/login/superuser" element={<ProtectedRoute><SuperUserPage/></ProtectedRoute>} />
+            <Route path="/super/master-data" element={<ProtectedRoute><MasterData/></ProtectedRoute>} />
             <Route path="/login/option" element={<ProtectedRoute><PermitOptions/></ProtectedRoute>} />
             <Route path="/login/requestadmin" element={<ProtectedRoute><MyRequests2 /></ProtectedRoute>} />
             <Route path="/login/requestsuperadmin/:userId" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
             <Route path="/login/requestsuperadmin/" element={<ProtectedRoute><MyRequests3 /></ProtectedRoute>} />
+            <Route path="/homepagehot" element={<ProtectedRoute><HomepageHot /></ProtectedRoute>} />
+            <Route path="/homepageelectric" element={<ProtectedRoute><HomepageElectric /></ProtectedRoute>} />
+            <Route path="/homepagenormal" element={<ProtectedRoute><HomepageNormal /></ProtectedRoute>} />
+            
+
+
           </Route>
         </Routes>
       </Router>

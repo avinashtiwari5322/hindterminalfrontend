@@ -378,7 +378,7 @@ const HeightWorkPermit3 = (props) => {
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center space-x-2">
               <img src={hindLogo} alt="Hind Logo" className="h-12 w-auto object-contain" />
-            </div>
+            </div> 
             {/* <div className="text-right text-sm text-gray-600">
               <div>Doc. No.: HTPL/OHS/23</div>
               <div>Eff. Date: 02.01.24</div>
@@ -1058,8 +1058,10 @@ const HeightWorkPermit3 = (props) => {
               onClick={closePermit}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Closer
+              Reject
             </button>
+            
+            
         </div>
 
         

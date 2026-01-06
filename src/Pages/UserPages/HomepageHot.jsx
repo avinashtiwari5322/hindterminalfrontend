@@ -12,11 +12,12 @@ import {
   X,
   Printer,
 } from "lucide-react";
-import hindLogo from "../../Assets/hindimg.png";
 import { toast } from 'react-toastify';
+import hindLogo from "../../Assets/hindimg.png";
 import Modal from "react-modal";
 
-const HeightWorkPermit = () => {
+
+const HotWorkPermit4 = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const roleId = user.roleId || user.RoleId;
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const HeightWorkPermit = () => {
   const isAdminView = !!id;
 
   const [formData, setFormData] = useState({
-    PermitTypeId: 1,
+    PermitTypeId: 3,
     permitDate: "",
     permitNumber: "",
     location: "",
@@ -32,12 +33,12 @@ const HeightWorkPermit = () => {
     fireAlarmPoint: "",
     totalWorkers: "",
     workDescription: "",
-      departmentName: "",
+    department: "",
     contractorOrg: "",
     supervisorName: "",
     contactNumber: "",
     receiverChecks: {},
-    issuerChecks: {},
+    residualHazards: {},
     ppe: {},
     files: [],
     issuer: { name: "", designation: "", dateTime: "", updatedBy: "" },
@@ -46,9 +47,10 @@ const HeightWorkPermit = () => {
     reviewer: { name: "", designation: "", dateTime: "", updatedBy: "" },
     approver: { name: "", designation: "", dateTime: "", updatedBy: "" },
     additionalPpe: "",
-    reason: "",
+    otherHazards: "",
     machineId: "",
     lockTagNo: "",
+    reason: "",
     status: "Active",
     isolationRequired: false,
     WorkLocationId: null,
@@ -84,7 +86,7 @@ const HeightWorkPermit = () => {
           setIsClosed(!closed);
           setFormData((prev) => ({
             ...prev,
-            PermitTypeId: data.PermitTypeId || 1,
+            PermitTypeId: data.PermitTypeId || 3,
             permitDate: data.PermitDate ? data.PermitDate.split("T")[0] : "",
             permitNumber: data.PermitNumber || "",
             location: data.WorkLocation || "",
@@ -92,14 +94,15 @@ const HeightWorkPermit = () => {
             fireAlarmPoint: data.NearestFireAlarmPoint || "",
             totalWorkers: data.TotalEngagedWorkers || "",
             workDescription: data.WorkDescription || "",
+            departmentName: data.DepartmentName || "",
             contractorOrg: data.Organization || "",
             supervisorName: data.SupervisorName || "",
             contactNumber: data.ContactNumber || "",
-            departmentName: data.DepartmentName || "",
-            reason: data.Reason || "",
             additionalPpe: data.AdditionalPpe || "",
+            otherHazards: data.OtherHazards || "",
             machineId: data.MachineId || "",
             lockTagNo: data.LockTagNo || "",
+            reason: data.Reason || "",
             status: data.CurrentPermitStatus || "Active",
             referencePermitId: data.ReferencePermitId || data.ReferencePermitID || data.ReferencePermit || null,
             referencePermitNumber: data.ReferencePermitNumber || data.ReferencePermitNo || null,
@@ -108,37 +111,40 @@ const HeightWorkPermit = () => {
             alarmPointId: data.AlarmPointId || null,
             departmentId: data.DepartmentId || null,
             receiverChecks: {
-              scaffoldChecked: data.ScaffoldChecked ? "required" : "not-required",
-              scaffoldTagged: data.ScaffoldTagged ? "required" : "not-required",
-              scaffoldRechecked: data.ScaffoldRechecked ? "required" : "not-required",
-              scaffoldErected: data.ScaffoldErected ? "required" : "not-required",
-              hangingBaskets: data.HangingBaskets ? "required" : "not-required",
-              platformSafe: data.PlatformSafe ? "required" : "not-required",
-              catLadders: data.CatLadders ? "required" : "not-required",
-              edgeProtection: data.EdgeProtection ? "required" : "not-required",
+              workAreaInspected: data.WorkAreaInspected ? "Required" : "not-required",
+              surroundingAreaChecked: data.SurroundingAreaChecked ? "Required" : "not-required",
+              sewersCovered: data.SewersCovered ? "Required" : "not-required",
+              warningSigns: data.WarningSigns ? "Required" : "not-required",
+              fireEquipmentAccess: data.FireEquipmentAccess ? "Required" : "not-required",
+              ventilationLighting: data.VentilationLighting ? "Required" : "not-required",
+              oilGasTrapped: data.OilGasTrapped ? "Required" : "not-required",
+              weldingEquipment: data.WeldingEquipment ? "Required" : "not-required",
+              earthingElcb: data.EarthingElcb ? "Required" : "not-required",
+              heightPermit: data.HeightPermit ? "Required" : "not-required",
+              equipmentDrained: data.EquipmentDrained ? "Required" : "not-required",
+              lockoutTagout: data.LockoutTagout ? "Required" : "not-required",
             },
-            issuerChecks: {
-              platforms: data.Platforms ? "required" : "not-required",
-              safetyHarness: data.SafetyHarness ? "required" : "not-required",
-              energyPrecautions: data.EnergyPrecautions ? "required" : "not-required",
-              illumination: data.Illumination ? "required" : "not-required",
-              unguardedAreas: data.UnguardedAreas ? "required" : "not-required",
-              fallProtection: data.FallProtection ? "required" : "not-required",
-              accessMeans: data.AccessMeans ? "required" : "not-required",
+            residualHazards: {
+              noiseDust: data.NoiseDust || false,
+              slipTripFall: data.SlipTripFall || false,
+              vehicleHazards: data.VehicleHazards || false,
+              fallingObjects: data.FallingObjects || false,
+              manualHandling: data.ManualHandling || false,
+              lackOfOxygen: data.LackOfOxygen || false,
+              biologicalHazards: data.BiologicalHazards || false,
+              electricalHazards: data.ElectricalHazards || false,
+              combustibleGases: data.CombustibleGases || false,
             },
             ppe: {
-              safetyHelmet: !!data.SafetyHelmet,
-              safetyJacket: !!data.SafetyJacket,
-              safetyShoes: !!data.SafetyShoes,
-              gloves: !!data.Gloves,
-              safetyGoggles: !!data.SafetyGoggles,
-              faceShield: !!data.FaceShield,
-              dustMask: !!data.DustMask,
-              earPlugOrEarmuff: !!data.EarPlugEarmuff,
-              safetyNet: !!data.SafetyNet,
-              anchorPointLifelines: !!data.AnchorPointLifelines,
-              selfRetractingLifeline: !!data.SelfRetractingLifeline,
-              fullBodyHarness: !!data.FullBodyHarness,
+              safetyHelmet: data.SafetyHelmet || false,
+              safetyJacket: data.SafetyJacket || false,
+              safetyShoes: data.SafetyShoes || false,
+              weldingGloves: data.WeldingGloves || false,
+              weldingGlasses: data.WeldingGlasses || false,
+              faceShield: data.FaceShield || false,
+              weldingApron: data.WeldingApron || false,
+              dustMask: data.DustMask || false,
+              earPlugEarmuff: data.EarPlugEarmuff || false,
             },
             issuer: {
               name: data?.IssuerUser?.Name || "",
@@ -171,15 +177,15 @@ const HeightWorkPermit = () => {
               updatedBy: data?.ApproverUser?.UpdatedBy || ""
             },
             files: (data.Files || []).map((file) => ({
-              id: file.FileID,
-              name: file.FileName,
-              size: file.FileSize,
-              type: file.FileType,
-              url: `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}`,
+              id: file.FileID || file.id || file.filename,
+              name: file.FileName || file.originalName,
+              size: file.FileSize || file.size,
+              type: file.FileType || file.mimetype,
+              url: file.FilePath ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined,
               preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
             })),
           }));
-          // Fetch close documents if status is closed or closer pending
+           // Fetch close documents if status is closed or closer pending
           if (["close", "closer pending"].includes(data.CurrentPermitStatus?.toLowerCase())) {
             fetchCloseDocuments();
           }
@@ -318,7 +324,7 @@ const HeightWorkPermit = () => {
     setSelectedCloseFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  
+
 
   // Close Modal Handlers
   const openCloseModal = () => setIsCloseModalOpen(true);
@@ -332,6 +338,7 @@ const HeightWorkPermit = () => {
   const showCloseButton = formData.status?.toLowerCase() === "closer pending";
 
   const API_FIELD_MAPPING = {
+    PermitTypeId: 'PermitTypeId',
     permitDate: 'PermitDate',
     permitNumber: 'PermitNumber',
     location: 'WorkLocation',
@@ -342,39 +349,43 @@ const HeightWorkPermit = () => {
     contractorOrg: 'Organization',
     supervisorName: 'SupervisorName',
     contactNumber: 'ContactNumber',
-    reason: 'Reason',
     additionalPpe: 'AdditionalPpe',
+    otherHazards: 'OtherHazards',
     machineId: 'MachineId',
     lockTagNo: 'LockTagNo',
+    reason: 'Reason',
     status: 'status',
     isolationRequired: 'IsolationRequired',
-    scaffoldChecked: 'ScaffoldChecked',
-    scaffoldTagged: 'ScaffoldTagged',
-    scaffoldRechecked: 'ScaffoldRechecked',
-    scaffoldErected: 'ScaffoldErected',
-    hangingBaskets: 'HangingBaskets',
-    platformSafe: 'PlatformSafe',
-    catLadders: 'CatLadders',
-    edgeProtection: 'EdgeProtection',
-    platforms: 'Platforms',
-    safetyHarness: 'SafetyHarness',
-    energyPrecautions: 'EnergyPrecautions',
-    illumination: 'Illumination',
-    unguardedAreas: 'UnguardedAreas',
-    fallProtection: 'FallProtection',
-    accessMeans: 'AccessMeans',
+    workAreaInspected: 'WorkAreaInspected',
+    surroundingAreaChecked: 'SurroundingAreaChecked',
+    sewersCovered: 'SewersCovered',
+    warningSigns: 'WarningSigns',
+    fireEquipmentAccess: 'FireEquipmentAccess',
+    ventilationLighting: 'VentilationLighting',
+    oilGasTrapped: 'OilGasTrapped',
+    weldingEquipment: 'WeldingEquipment',
+    earthingElcb: 'EarthingElcb',
+    heightPermit: 'HeightPermit',
+    equipmentDrained: 'EquipmentDrained',
+    lockoutTagout: 'LockoutTagout',
+    noiseDust: 'NoiseDust',
+    slipTripFall: 'SlipTripFall',
+    vehicleHazards: 'VehicleHazards',
+    fallingObjects: 'FallingObjects',
+    manualHandling: 'ManualHandling',
+    lackOfOxygen: 'LackOfOxygen',
+    biologicalHazards: 'BiologicalHazards',
+    electricalHazards: 'ElectricalHazards',
+    combustibleGases: 'CombustibleGases',
     safetyHelmet: 'SafetyHelmet',
     safetyJacket: 'SafetyJacket',
     safetyShoes: 'SafetyShoes',
-    gloves: 'Gloves',
-    safetyGoggles: 'SafetyGoggles',
+    weldingGloves: 'WeldingGloves',
+    weldingGlasses: 'WeldingGlasses',
     faceShield: 'FaceShield',
+    weldingApron: 'WeldingApron',
     dustMask: 'DustMask',
-    earPlugOrEarmuff: 'EarPlugEarmuff',
-    safetyNet: 'SafetyNet',
-    anchorPointLifelines: 'AnchorPointLifelines',
-    selfRetractingLifeline: 'SelfRetractingLifeline',
-    fullBodyHarness: 'FullBodyHarness',
+    earPlugEarmuff: 'EarPlugEarmuff',
     issuerName: 'Issuer_Name',
     issuerDesignation: 'Issuer_Designation',
     issuerDateTime: 'Issuer_DateTime',
@@ -398,20 +409,20 @@ const HeightWorkPermit = () => {
     alarmPointId: 'AlarmPointId',
     workLocationId: 'WorkLocationId',
     departmentId: 'DepartmentId',
+
   };
 
   const convertToApiFormat = (formData) => {
     const apiData = {
       UserId: user?.UserId || user?.id,
       PermitTypeId: formData.PermitTypeId,
-      Location : localStorage.getItem("locationId") || '',
     };
 
     const basicFields = [
-      'permitDate', 'permitNumber', 'location', 'validUpto', 
-      'fireAlarmPoint', 'totalWorkers', 'workDescription', 
+      'permitDate', 'permitNumber', 'location', 'validUpto',
+      'fireAlarmPoint', 'totalWorkers', 'workDescription',
       'contractorOrg', 'supervisorName', 'contactNumber',
-      'additionalPpe', 'machineId', 'lockTagNo', 
+      'otherHazards', 'additionalPpe', 'machineId', 'lockTagNo',
       'status', 'isolationRequired'
     ];
     if (roleId === 3) {
@@ -433,14 +444,14 @@ const HeightWorkPermit = () => {
     Object.entries(formData.receiverChecks || {}).forEach(([key, value]) => {
       const apiKey = API_FIELD_MAPPING[key];
       if (apiKey) {
-        apiData[apiKey] = value === "required";
+        apiData[apiKey] = value === "Required";
       }
     });
 
-    Object.entries(formData.issuerChecks || {}).forEach(([key, value]) => {
+    Object.entries(formData.residualHazards || {}).forEach(([key, value]) => {
       const apiKey = API_FIELD_MAPPING[key];
       if (apiKey) {
-        apiData[apiKey] = value === "required";
+        apiData[apiKey] = value === true;
       }
     });
 
@@ -510,7 +521,7 @@ const HeightWorkPermit = () => {
     }
   };
 
-  const handleRejectClick = async () => {
+    const handleRejectClick = async () => {
     if (!formData.reason) {
       toast.error("Please provide a reason for rejecting the permit");
       return;
@@ -605,8 +616,8 @@ const HeightWorkPermit = () => {
       ...prev,
       [section]: {
         ...prev[section],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -668,46 +679,152 @@ const HeightWorkPermit = () => {
   };
 
   const receiverCheckItems = [
-    { id: "scaffoldChecked", text: "Have scaffolds been checked and certified in prescribed form by scaffold supervisor?" },
-    { id: "scaffoldTagged", text: "Have scaffolds been tagged with green card duly filled and signed by scaffold supervisor?" },
-    { id: "scaffoldRechecked", text: "Is scaffold rechecked and re-certified weekly?" },
-    { id: "scaffoldErected", text: "Is scaffold erected on firm ground and sole plate and base plate have been used?" },
-    { id: "hangingBaskets", text: "Are the hanging baskets used of proper construction, tested and certified for the purpose?" },
-    { id: "platformSafe", text: "Is the work platform made free of hazards of all traps/trips/slips and fall?" },
-    { id: "catLadders", text: "Have cat ladders, crawling boards etc been used for safe working at sloping roof?" },
-    { id: "edgeProtection", text: "Has edge protection provided against fall from roof/elevated space?" },
+    {
+      id: "workAreaInspected",
+      text: "Work area/Equipment inspected (Check for any additional required activities such as material shifting, equipment/area cleaning, ensuring the equipment is safe for use, or any other necessary assistance related to that area/equipment)",
+    },
+    {
+      id: "surroundingAreaChecked",
+      text: "Surrounding area checked, to ensure no additional hazards are present",
+    },
+    {
+      id: "sewersCovered",
+      text: "Sewers, manholes, etc and hot surface nearby covered",
+    },
+    {
+      id: "warningSigns",
+      text: "Warning sign and barriers required",
+    },
+    {
+      id: "fireEquipmentAccess",
+      text: "Free Access for approach of fire equipment’s have been maintained",
+    },
+    {
+      id: "ventilationLighting",
+      text: "Proper ventilation, lighting and exit/escape available",
+    },
+    {
+      id: "oilGasTrapped",
+      text: "Checked for oil and gas trapped behind the lining in equipment",
+    },
+    {
+      id: "weldingEquipment",
+      text: "Welding equipment is in good working condition (No wire damage, open wire)",
+    },
+    {
+      id: "earthingElcb",
+      text: "Check for earthing/ELCB of any temporary electrical connections being used for welding",
+    },
+    {
+      id: "heightPermit",
+      text: "Permit taken for work at height",
+    },
+    {
+      id: "equipmentDrained",
+      text: "Equipment properly drained, depressurized, and de-energized",
+    },
+    {
+      id: "lockoutTagout",
+      text: "Lock out/tag out is required to isolate the equipment",
+    },
   ];
 
-  const issuerCheckItems = [
-    { id: "platforms", text: "Are the platforms been provided with Toe board, guardrail and area below is barricaded?" },
-    { id: "safetyHarness", text: "Checked whether safety harness and necessary arrangement for tying the lifeline, fall arresters etc provided to the worker for working at height?" },
-    { id: "energyPrecautions", text: "Have precautions been listed below for safe working at height for source of energy Such as electricity?" },
-    { id: "illumination", text: "Is the raised work surface properly illuminated?" },
-    { id: "unguardedAreas", text: "Are the workers working near unguarded shafts, excavations or hot line?" },
-    { id: "fallProtection", text: "Checked for provision of collective fall protection such as safety net?" },
-    { id: "accessMeans", text: "Are proper means of access to the scaffold including use of standard aluminium ladder provided?" },
+  const residualHazardItems = [
+    { id: "noiseDust", text: "Noise or Dust Exposure" },
+    { id: "slipTripFall", text: "Slip/Trip/Fall" },
+    { id: "vehicleHazards", text: "Vehicle Hazards" },
+    { id: "fallingObjects", text: "Falling Objects" },
+    { id: "manualHandling", text: "Manual Handling Objects" },
+    { id: "lackOfOxygen", text: "Lack of Oxygen" },
+    { id: "biologicalHazards", text: "Biological Hazards" },
+    { id: "electricalHazards", text: "General Electrical Hazards" },
+    { id: "combustibleGases", text: "Combustible Gases" },
   ];
 
   const ppeItems = [
     { id: "safetyHelmet", text: "Safety Helmet" },
     { id: "safetyJacket", text: "Safety Jacket" },
     { id: "safetyShoes", text: "Safety Shoes" },
-    { id: "gloves", text: "Gloves" },
-    { id: "safetyGoggles", text: "Safety Goggles" },
+    { id: "weldingGloves", text: "Welding Gloves" },
+    { id: "weldingGlasses", text: "Welding Glasses" },
     { id: "faceShield", text: "Face Shield" },
+    { id: "weldingApron", text: "Welding Apron" },
     { id: "dustMask", text: "Dust Mask" },
-    { id: "earPlugOrEarmuff", text: "Ear plug/Earmuff" },
-    { id: "safetyNet", text: "Safety Net" },
-    { id: "anchorPointLifelines", text: "Anchor Point/Lifelines" },
-    { id: "selfRetractingLifeline", text: "Self retracting Lifeline (SRL)" },
-    { id: "fullBodyHarness", text: "Full body harness with lanyard or shock absorbers" },
+    { id: "earPlugEarmuff", text: "Ear Plug/Earmuff" },
+  ];
+
+  const dosAndDonts = [
+    {
+      do: "Ensure the availability of valid work permit before start of work.",
+      dont: "Never stand or work under suspended loads.",
+    },
+    {
+      do: "Ensure that work permit conditions are fully complied at site.",
+      dont: "Never enter work area without PPE’s.",
+    },
+    {
+      do: "Area shall be free from all flammables, combustibles and drains etc.",
+      dont: "Do not use short cuts on work.",
+    },
+    {
+      do: "In case of gas welding/cutting, cylinders should be kept in upright position, and these should be easily identifiable by its colour.",
+      dont: "Do not wear loose/synthetic clothes while on work.",
+    },
+    {
+      do: "Hose connections of gas cylinders should be checked before starting of hot job. It must be free from all cuts and kinks and distinct in colour.",
+      dont: "Do not use lamp of more than 24 V while working in confined space.",
+    },
+    {
+      do: "Receiver must ensure use of proper PPEs during hot work.",
+      dont: "Do not use electrode holders as cable connectors for extension of welding cable.",
+    },
+    {
+      do: "In case of welding/cutting, etc it should be ensured that spark is arrested at site only, especially while carrying out hot work at height.",
+      dont: "",
+    },
+    {
+      do: "Receiver shall ensure use of flash back arrestor in gas cylinders, use welding lighters only to light the welding torch.",
+      dont: "Never keep acetylene cylinders in horizontal condition, even if they are empty.",
+    },
+    {
+      do: "While carrying out hot work inside confined space, proper ventilation and illumination should be ensured before start of job.",
+      dont: "Never use grinder without wheel guard on abrasive wheels.",
+    },
+    {
+      do: "Electric cable shall be free from joints. Portable electrical equipment should have no loose connections and connect with ELCB.",
+      dont: "",
+    },
+    {
+      do: "Receiver shall ensure that the lifting machines tools & tackles are properly tested and SWL and date of testing is displayed on equip.",
+      dont: "",
+    },
+    {
+      do: "Barricading of the area below lifting machine (crane) should be ensured before carrying out the job.",
+      dont: "",
+    },
+    {
+      do: "Receiver/worker should know the nearest fire alarm point, fire order, emergency contact no., escape route and location assembly points.",
+      dont: "",
+    },
+    {
+      do: "Executor shall ensure the quality of hand tools and their health.",
+      dont: "",
+    },
+    {
+      do: "Ensure valve cap on cylinders during storage and transportation, if shrouds are not provided.",
+      dont: "",
+    },
+    {
+      do: "After the completion of the job, copies of work permit should be returned to the ISSUER.",
+      dont: "",
+    },
   ];
 
   // Define editable sections based on roleId
   const canEditSpecOfWork = roleId === 1 && isClosed;
   const canEditReceiverChecks = roleId === 2 && isClosed;
   const canEditIsolationRequired = roleId === 5 && isClosed;
-  const canEditIssuerChecks = roleId === 2 && isClosed;
+  const canEditResidualHazards = roleId === 3 && isClosed;
   const canEditPPE = roleId === 3 && isClosed;
   const canEditWorkAuthorized = false; // All roles can edit
   const canEditDosAndDonts = true; // All roles can edit (assuming this section is informational)
@@ -722,10 +839,8 @@ const HeightWorkPermit = () => {
             </div>
           </div>
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">HEIGHT WORK PERMIT</h1>
-          </div>
-          <div className="text-center text-gray-700 leading-relaxed">
-            <p>This permit authorizes the provision of safe Access, Platforms, or Working arrangement at heights of 1.8 meters and above for the execution of the job</p>
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">HOT WORK PERMIT</h1>
+            <p className="text-gray-600">As per IS 17893:2023</p>
           </div>
         </div>
 
@@ -736,15 +851,30 @@ const HeightWorkPermit = () => {
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Permit Number
                 </label>
                 <input
                   type="text"
-                  placeholder="HTPL/HWP/"
+                  placeholder="HTPL/HTWP/"
                   value={formData.permitNumber}
                   onChange={(e) => canEditSpecOfWork && handleInputChange("permitNumber", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  readOnly={!canEditSpecOfWork}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Date of Permit to Work
+                </label>
+                <input
+                  type="date"
+                  value={formData.permitDate}
+                  onChange={(e) => canEditSpecOfWork && handleInputChange("permitDate", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   readOnly={!canEditSpecOfWork}
                 />
@@ -760,18 +890,6 @@ const HeightWorkPermit = () => {
                   />
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nearest Fire Alarm Point
-                </label>
-                <input
-                  type="text"
-                  value={formData.fireAlarmPoint}
-                  onChange={(e) => canEditSpecOfWork && handleInputChange("fireAlarmPoint", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  readOnly={!canEditSpecOfWork}
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-4 h-4 inline mr-1" />
@@ -802,13 +920,12 @@ const HeightWorkPermit = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Date of Permit to Work
+                  Nearest Fire Alarm Point
                 </label>
                 <input
-                  type="date"
-                  value={formData.permitDate}
-                  onChange={(e) => canEditSpecOfWork && handleInputChange("permitDate", e.target.value)}
+                  type="text"
+                  value={formData.fireAlarmPoint}
+                  onChange={(e) => canEditSpecOfWork && handleInputChange("fireAlarmPoint", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   readOnly={!canEditSpecOfWork}
                 />
@@ -889,7 +1006,6 @@ const HeightWorkPermit = () => {
               </div>
             </div>
           </div>
-          
           <div className="bg-white rounded-lg shadow-md p-6 mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <Upload className="w-5 h-5 text-purple-600" />
@@ -957,8 +1073,8 @@ const HeightWorkPermit = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">2. RECEIVER Compliance Check</h2>
-          <p className="text-gray-600 mb-6">Check the following items for compliance before requiring the permission</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">2. Compliance Check</h2>
+          <p className="text-gray-600 mb-6">Check the following items before issuing the permit</p>
           <div className="space-y-4">
             {receiverCheckItems.map((item, index) => (
               <div key={item.id} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
@@ -969,13 +1085,13 @@ const HeightWorkPermit = () => {
                     <input
                       type="radio"
                       name={item.id}
-                      value="required"
-                      checked={formData.receiverChecks[item.id] === "required"}
+                      value="Required"
+                      checked={formData.receiverChecks[item.id] === "Required"}
                       onChange={(e) => canEditReceiverChecks && handleCheckboxChange("receiverChecks", item.id, e.target.value)}
                       className="mr-2 text-green-600"
                       disabled={!canEditReceiverChecks}
                     />
-                    <span className="text-green-600 font-medium">required</span>
+                    <span className="text-green-600 font-medium">Required</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -993,87 +1109,77 @@ const HeightWorkPermit = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        
-
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">3. ISSUER Risk Assessment</h2>
-          <p className="text-gray-600 mb-6">The following items shall be checked for Risk Assessment by ISSUER and complied by the RECEIVER</p>
-          <div className="space-y-4">
-            {issuerCheckItems.map((item, index) => (
-              <div key={item.id} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <span className="font-semibold text-blue-600 mt-1">{index + 1}.</span>
-                <p className="flex-1 text-gray-800">{item.text}</p>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={item.id}
-                      value="required"
-                      checked={formData.issuerChecks[item.id] === "required"}
-                      onChange={(e) => canEditIssuerChecks && handleCheckboxChange("issuerChecks", item.id, e.target.value)}
-                      className="mr-2 text-green-600"
-                      disabled={!canEditIssuerChecks}
-                    />
-                    <span className="text-green-600 font-medium">required</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={item.id}
-                      value="not-required"
-                      checked={formData.issuerChecks[item.id] === "not-required"}
-                      onChange={(e) => canEditIssuerChecks && handleCheckboxChange("issuerChecks", item.id, e.target.value)}
-                      className="mr-2 text-gray-600"
-                      disabled={!canEditIssuerChecks}
-                    />
-                    <span className="text-gray-600 font-medium">Not Required</span>
-                  </label>
+          {formData.isolationRequired && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-800 text-xl md:text-2xl mb-3">Isolation Required</h3>
+              <p className="text-gray-600 mb-4">
+                Machine/equipment ID has been isolated from all sources of stored energy by switching off the MCB, placing the lever down, closing the valve etc.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Machine/Equipment ID</label>
+                  <input
+                    type="text"
+                    value={formData.machineId}
+                    onChange={(e) => canEditIsolationRequired && handleInputChange("machineId", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    readOnly={!canEditIsolationRequired}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Lock & Tag No.</label>
+                  <input
+                    type="text"
+                    value={formData.lockTagNo}
+                    onChange={(e) => canEditIsolationRequired && handleInputChange("lockTagNo", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    readOnly={!canEditIsolationRequired}
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-          {formData.isolationRequired && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-gray-800 text-xl md:text-2xl mb-3">Isolation Required</h3>
-            <p className="text-gray-600 mb-4">
-              Machine/equipment ID has been isolated from all sources of stored energy by switching off the MCB, placing the lever down, closing the valve etc.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Machine/Equipment ID</label>
-                <input
-                  type="text"
-                  value={formData.machineId}
-                  onChange={(e) => canEditIsolationRequired && handleInputChange("machineId", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  readOnly={!canEditIsolationRequired}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Lock & Tag No.</label>
-                <input
-                  type="text"
-                  value={formData.lockTagNo}
-                  onChange={(e) => canEditIsolationRequired && handleInputChange("lockTagNo", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  readOnly={!canEditIsolationRequired}
-                />
-              </div>
+              <p className="text-gray-600 mt-4">
+                Isolation details have been recorded in the logbook. One of the LOTO Key should be available with work executer.
+              </p>
             </div>
-            <p className="text-gray-600 mt-4">
-              Isolation details have been recorded in the logbook. One of the LOTO Key should be available with work executer.
-            </p>
-          </div>
-        )}
+          )}
         </div>
 
-        
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">3. Expected Residual Hazards</h2>
+          <p className="text-gray-600 mb-6">The activity has the following expected residual hazards</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {residualHazardItems.map((item) => (
+              <label
+                key={item.id}
+                className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.residualHazards[item.id] || false}
+                  onChange={(e) => canEditResidualHazards && handleCheckboxChange("residualHazards", item.id, e.target.checked)}
+                  className="mr-3 text-blue-600 focus:ring-blue-500"
+                  disabled={!canEditResidualHazards}
+                />
+                <span className="text-gray-800">{item.text}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Other Hazards (If any)</label>
+            <textarea
+              rows={3}
+              value={formData.otherHazards}
+              onChange={(e) => canEditResidualHazards && handleInputChange("otherHazards", e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Specify any additional hazards..."
+              readOnly={!canEditResidualHazards}
+            />
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">4. Required PPE to be Used</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {ppeItems.map((item) => (
               <label
                 key={item.id}
@@ -1117,225 +1223,64 @@ const HeightWorkPermit = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">Issuer</td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.issuer.name}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("issuer", "name", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.issuer.designation}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("issuer", "designation", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter designation"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="datetime-local"
-                      value={formData.issuer.dateTime}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("issuer", "dateTime", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value=""
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("issuer", "updatedBy", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder=""
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">Receiver</td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.receiver.name}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("receiver", "name", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter name"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.receiver.designation}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("receiver", "designation", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter designation"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="datetime-local"
-                      value={formData.receiver.dateTime}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("receiver", "dateTime", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value=""
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("receiver", "updatedBy", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder=""
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">
-                    Energy Isolate By:<br />
-                    <span className="text-sm text-gray-500">(Isolation required)</span>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.energyIsolate.name}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("energyIsolate", "name", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter name"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.energyIsolate.designation}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("energyIsolate", "designation", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter designation"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="datetime-local"
-                      value={formData.energyIsolate.dateTime}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("energyIsolate", "dateTime", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value=""
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("energyIsolate", "updatedBy", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder=""
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">Reviewer (QHSE)</td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.reviewer.name}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("reviewer", "name", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter name"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.reviewer.designation}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("reviewer", "designation", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter designation"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="datetime-local"
-                      value={formData.reviewer.dateTime}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("reviewer", "dateTime", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value=""
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("reviewer", "updatedBy", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder=""
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">Approver</td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.approver.name}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("approver", "name", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter name"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value={formData.approver.designation}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("approver", "designation", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter designation"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="datetime-local"
-                      value={formData.approver.dateTime}
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("approver", "dateTime", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                  <td className="border border-gray-300 px-4 py-3">
-                    <input
-                      type="text"
-                      value=""
-                      onChange={(e) => canEditWorkAuthorized && handleWorkflowChange("approver", "updatedBy", e.target.value)}
-                      className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder=""
-                      readOnly={!canEditWorkAuthorized}
-                    />
-                  </td>
-                </tr>
+                {['issuer', 'receiver', 'energyIsolate', 'reviewer', 'approver'].map((section) => (
+                  <tr key={section} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-3 font-medium text-gray-700">
+                      {section === 'energyIsolate' ? (
+                        <>
+                          Energy Isolate By:<br />
+                          <span className="text-sm text-gray-500">(Isolation required)</span>
+                        </>
+                      ) : section === 'reviewer' ? 'Reviewer (QHSE)' : section.charAt(0).toUpperCase() + section.slice(1)}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <input
+                        type="text"
+                        value={formData[section].name}
+                        onChange={(e) => canEditWorkAuthorized && handleWorkflowChange(section, "name", e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter name"
+                        readOnly={!canEditWorkAuthorized}
+                      />
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <input
+                        type="text"
+                        value={formData[section].designation}
+                        onChange={(e) => canEditWorkAuthorized && handleWorkflowChange(section, "designation", e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter designation"
+                        readOnly={!canEditWorkAuthorized}
+                      />
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <input
+                        type="datetime-local"
+                        value={formData[section].dateTime }
+                        onChange={(e) => canEditWorkAuthorized && handleWorkflowChange(section, "dateTime", e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        readOnly={!canEditWorkAuthorized}
+                      />
+                    </td>
+                    <td className="border border-gray-300 px-4 py-3">
+                      <input
+                        type="text"
+                        value=""
+                        onChange={(e) => canEditWorkAuthorized && handleWorkflowChange(section, "updatedBy", e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder=""
+                        readOnly={!canEditWorkAuthorized}
+                      />
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">6. Do's & Don't</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">6. Do's & Don'ts</h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
@@ -1346,70 +1291,16 @@ const HeightWorkPermit = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">1</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Ensure the availability of valid work permit before start of work.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Never stand or work under suspended loads.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">2</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Ensure that work permit conditions are fully complied at site.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Do not use short cuts on work.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">3</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Equipment should be properly isolated from all sources of energy before start of work.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Do not wear loose/ synthetic clothes while at work.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">4</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Ensure that walkways and passages are free from all slip/trip and fall hazard.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Never perform general work without a safety jacket or safety shoes.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">5</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">All draining of oil should be in closed system as the draining of oil on floor will make the work area and area around the work unsafe.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Do not run a machine without putting back the guard on its exposed moving part.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">6</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Ensure proper illumination of workplace while working in dark.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">All works at height shall be discontinued during rain/high wind/floods.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">7</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Use of approved type full body safety harness along with lifeline is must for working at height of 2.0 m and above, Use of safety helmet and shoe is mandatory for all work sites.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800">Do not continue the job in case scaffold is sagging unduly, report to ISSUER or RECEIVER.</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">8</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Receiver should ensure that the lifting machine (crane), tools and tackles are properly tested and SWL and date of testing is displayed on equipment.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800"></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">9</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Barricading of the area below lifting machine (crane), chain pulley blocks etc, should be ensured before starting the job.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800"></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">10</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Remove all scraps, unused material from site on completion of work.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800"></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">11</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">Receiver/worker should know the nearest fire alarm point, fire order, emergency contact no., escape route and location assembly points.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800"></td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="border border-gray-300 px-4 py-3 text-center font-medium">12</td>
-                  <td className="border border-gray-300 px-4 py-3 text-green-800">After the completion of the job, copies of work permit should be returned to the ISSUER.</td>
-                  <td className="border border-gray-300 px-4 py-3 text-red-800"></td>
-                </tr>
+                {dosAndDonts.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-3 text-center font-medium">{index + 1}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-green-800">{item.do}</td>
+                    <td className="border border-gray-300 px-4 py-3 text-red-800">{item.dont || ''}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-         
         </div>
         {/* Close Permit Document Section */}
         {(formData.status?.toLowerCase() === "close" || formData.status?.toLowerCase() === "closer pending") && closeDocuments.length > 0 && (
@@ -1467,9 +1358,6 @@ const HeightWorkPermit = () => {
                     </div>
                   </div>
                 )}
-
-
-
         {(roleId === 2 || roleId === 5) && (
           <>
             <button
@@ -1583,7 +1471,7 @@ const HeightWorkPermit = () => {
                   <Printer className="w-5 h-5 mr-2" />
                   Print
                 </button>
-               
+     
                   <button
                   onClick={handleHoldClick}
                   className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
@@ -1591,7 +1479,7 @@ const HeightWorkPermit = () => {
                 >
                   Hold
                 </button>
-                
+           
                 
               </div>
               <div className="flex justify-center space-x-4 mt-4">
@@ -1611,7 +1499,8 @@ const HeightWorkPermit = () => {
                     disabled={closingPermit}
                     className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 font-medium"
                   >
-                    <XCircle className="w-5 h-5 mr-2" />
+                    <XCircle className="w-5 h-5
+                     mr-2" />
                     {closingPermit ? "Closing..." : "Close Permit"}
                   </button>
                 )}
@@ -1670,7 +1559,7 @@ const HeightWorkPermit = () => {
                 />
               </div>
             </div>
-          
+     
               <button
               onClick={handleHoldClick}
               className="mt-4 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors"
@@ -1790,4 +1679,4 @@ const HeightWorkPermit = () => {
   );
 };
 
-export default HeightWorkPermit;
+export default HotWorkPermit4;

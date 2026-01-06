@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import {
-
   User,
-
   X,
   ChevronRight,
-
+  FileText,
+  FileSearch,
+  CheckCircle2,
+  Shield,
+  Database,
+  UserPlus,
   BarChart3,
- 
   Grid3x3,
 } from "lucide-react";
 import hindLogo from '../Assets/hindimg.png';
@@ -35,18 +37,31 @@ const SidebarNavbar = ({ children }) => {
 
   // Conditionally render menu items
   const menuItems = [
-    // Only show Work Permit if user is a 'filler'
-    ...(user && user.RoleName === 'filler' ? [
-      { icon: BarChart3, label: "Work Permit", href: `/about/${userId}` },
-    ] : []),
-    ...(user && user.RoleName === 'filler' ? [
-      { icon: BarChart3, label: "Check Status", href: `/login/requestsuperadmin/${userId}` },
-    ] : []),
-    // Only show Approvals if user is not a 'filler'
-    ...(user && user.RoleName === 'filler' ? [] : [
-      { icon: BarChart3, label: "Approvals", href: "/Approval" },
-    ]),
-  ];
+  // 1. Work Permit Application - Only for 'issuer' role
+  ...(user && user.RoleName === 'issuer'
+    ? [{ icon: FileText, label: "Apply Work Permit", href: `/about/${userId}` }]
+    : []),
+
+  // 2. Check My Requests / Status - Only for 'issuer'
+  ...(user && user.RoleName === 'issuer'
+    ? [{ icon: FileSearch, label: "Check Status", href: `/login/requestsuperadmin/${userId}` }]
+    : []),
+
+  // 3. Approvals - For approvers and superusers (i.e., NOT issuer-only users)
+  ...(user && user.RoleName !== 'issuer'
+    ? [{ icon: CheckCircle2, label: "Approvals", href: "/Approval" }]
+    : []),
+
+  // 5. Master Data / Admin Options - Optional: only for superuser
+  ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
+    ? [{ icon: Database, label: "Master Data", href: "/super/master-data" }]
+    : []),
+
+  // 6. Register New User - Only for superuser
+  // ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
+  //   ? [{ icon: UserPlus, label: "Register New User", href: "/super/register-new-user" }]
+  //   : []),
+];
 
   // Logout handler
   const handleLogout = () => {

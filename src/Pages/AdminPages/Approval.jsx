@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Filter,
-
   FileText,
   Clock,
   MapPin,
@@ -13,32 +12,107 @@ import { useNavigate } from "react-router-dom";
 
 const MyRequests = () => {
   const [statusFilter, setStatusFilter] = useState("All");
+  const [locationFilter, setLocationFilter] = useState(null); // New: location filter
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(null);
   const navigate = useNavigate();
 
-  // Add state for action menu
   const [actionMenuId, setActionMenuId] = useState(null);
-  // Add state to track selected request's files
   const [selectedFiles, setSelectedFiles] = useState([]);
+  // New state for locations
+  const [locations, setLocations] = useState([]);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState("");
 
-  // Fetch data from API
+  // Determine if current user is Super User
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {
+    user = null;
+  }
+  const isSuperUser = user?.RoleName === "superuser" ;
+
+  // Load default location from localStorage
+ useEffect(() => {
+  const storedLocation = localStorage.getItem("locationId");
+
+  // Only set if there's actually a value
+  if (storedLocation && storedLocation.trim() !== "") {
+    setLocationFilter(storedLocation);
+  }
+  // Do NOTHING if no stored location — keep default "" (which means "All")
+}, []);
+// Fetch locations from API
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchLocations = async () => {
+      try {
+        setLocationLoading(true);
+        setLocationError("");
+
+        const response = await fetch("https://hindterminal56.onrender.com/api/location-master", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch locations");
+        }
+
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+          setLocations(result.data); // [{ LocationName: "Palwal" }, ...]
+        } else {
+          throw new Error("Invalid location data");
+        }
+      } catch (err) {
+        console.error("Error fetching locations:", err);
+        setLocationError("Failed to load locations");
+        setLocations([]); // fallback
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+  // Fetch data from API whenever page, pageSize, or locationFilter changes
+  useEffect(() => {
+    if (locationFilter) {
+      const fetchRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://hindterminal56.onrender.com/api/permits');
-        
+        const payload = {
+          page,
+          pageSize,
+          locationId: locationFilter,
+        };
+        console.log("Fetching requests with payload:", payload);
+        const response = await fetch("https://hindterminal56.onrender.com/api/permit-list", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
-        // Transform API data to match component structure
-        const transformedData = data.map(permit => ({
-          id: permit.PermitID,
+
+        const items = Array.isArray(data) ? data : data.data || [];
+        if (data && typeof data.total !== "undefined") setTotal(data.total);
+        if (data && typeof data.page !== "undefined") setPage(data.page);
+        if (data && typeof data.pageSize !== "undefined") setPageSize(data.pageSize);
+
+        const transformedData = items.map((permit) => ({
+          id: permit.PermitId,
           permitNumber: permit.PermitNumber,
           location: permit.WorkLocation,
           permitDate: new Date(permit.PermitDate).toLocaleDateString(),
@@ -49,13 +123,15 @@ const MyRequests = () => {
           supervisorName: permit.SupervisorName,
           contactNumber: permit.ContactNumber,
           nearestFireAlarmPoint: permit.NearestFireAlarmPoint,
-          // Since the API doesn't have status field, we'll determine it based on dates
           status: permit.CurrentPermitStatus,
-          createdOn: permit.Created_on,
-          updatedOn: permit.Updated_on,
-          files: permit.Files || [] // Files array from the API
+          reachedTo: permit.permitReachTo,
+          createdOn: permit.CreatedOn,
+          updatedOn: permit.UpdatedOn,
+          files: permit.Files || [],
+          permitType: permit.PermitType,
+          isReopened: permit.IsReopened === true,
         }));
-        
+
         setRequests(transformedData);
       } catch (err) {
         setError(err.message);
@@ -65,45 +141,24 @@ const MyRequests = () => {
     };
 
     fetchRequests();
-  }, []);
+    }
 
-  // Add click outside handler to close menu
+  }, [page, pageSize, locationFilter]); // Re-fetch when location changes
+
+  // Close action menu on outside click
   useEffect(() => {
     const handleClick = () => setActionMenuId(null);
     if (actionMenuId !== null) {
-      window.addEventListener('click', handleClick);
-      return () => window.removeEventListener('click', handleClick);
+      window.addEventListener("click", handleClick);
+      return () => window.removeEventListener("click", handleClick);
     }
   }, [actionMenuId]);
 
-  // Determine status based on validity
-  const determineStatus = (validUpTo) => {
-    const now = new Date();
-    const expiryDate = new Date(validUpTo);
-    
-    if (expiryDate < now) {
-      return "Expired";
-    } else {
-      return "Hold";
-    }
-  };
-
-  // Filter requests based on status
+  // Filter requests by status (client-side)
   const filteredRequests =
     statusFilter === "All"
       ? requests
       : requests.filter((request) => request.status === statusFilter);
-
-  // Handle status change (for demo purposes - you'd need an API endpoint for this)
-  const handleStatusChange = async (id, newStatus) => {
-    // This would typically make an API call to update the status
-    // For now, just updating locally
-    setRequests((prev) =>
-      prev.map((request) =>
-        request.id === id ? { ...request, status: newStatus } : request
-      )
-    );
-  };
 
   if (loading) {
     return (
@@ -124,8 +179,8 @@ const MyRequests = () => {
           <div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Data</h3>
             <p className="text-gray-600">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Retry
@@ -143,9 +198,7 @@ const MyRequests = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                My Requests
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">My Requests</h1>
               <p className="text-gray-600">
                 Manage and review height work permit requests ({requests.length} total)
               </p>
@@ -155,32 +208,77 @@ const MyRequests = () => {
 
         {/* Filter Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-6">
             <h2 className="text-xl font-semibold text-gray-800 flex items-center">
               <Filter className="w-5 h-5 mr-2 text-blue-600" />
               Filter Requests
             </h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="All">All</option>
-                <option value="Active">Active</option>
-                <option value="Expired">Expired</option>
-              </select>
+
+            <div className="flex flex-wrap gap-6 items-end">
+              {/* Location Filter - Only for Super Users */}
+              {isSuperUser && (
+                <div className="min-w-48">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <select
+                    value={locationFilter}
+                    onChange={(e) => {
+                      setLocationFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    disabled={locationLoading}
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      locationLoading ? "opacity-70 cursor-not-allowed" : "border-gray-300"
+                    }`}
+                  >
+                    <option value="">
+                      {locationLoading
+                        ? "Loading locations..."
+                        : locationError
+                        ? "Error loading"
+                        : "-- All Locations --"}
+                    </option>
+                    {locations.map((loc) => (
+                      <option key={loc.LocationName} value={loc.LocationName}>
+                        {loc.LocationName}
+                      </option>
+                    ))}
+                  </select>
+                  {locationError && !locationLoading && (
+                    <p className="mt-1 text-xs text-red-600">{locationError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="All">All</option>
+                  <option value="Active">Active</option>
+                  <option value="Expired">Expired</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Hold">Hold</option>
+                  <option value="Reject">Reject</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Requests Table */}
+        {/* Rest of your table, pagination, file preview remains unchanged */}
+        {/* ... (keep everything below exactly as it was) */}
+
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Permit Requests ({filteredRequests.length})
+            Permit Requests ({total ?? filteredRequests.length})
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
@@ -188,6 +286,9 @@ const MyRequests = () => {
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Permit Number
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                    Permit Type
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Location
@@ -202,13 +303,10 @@ const MyRequests = () => {
                     Valid Up To
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
-                    Workers
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
-                    Description
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Status
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                    Submitted By
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Actions
@@ -220,9 +318,11 @@ const MyRequests = () => {
                   <tr>
                     <td
                       colSpan="9"
-                      className="border border-gray-300 px-4 py-3 text-center text-gray-600"
+                      className="border border-gray-300 px-4 py-8 text-center text-gray-600"
                     >
-                      No requests found for the selected status.
+                      {locationFilter
+                        ? "No requests found for the selected location and status."
+                        : "Please select a location to view requests."}
                     </td>
                   </tr>
                 ) : (
@@ -231,27 +331,36 @@ const MyRequests = () => {
                       key={request.id}
                       className="hover:bg-gray-50 cursor-pointer"
                       onClick={() => {
-                        navigate(`/approval/${request.id}`);
                         if (request.files && request.files.length > 0) {
-                          console.log('Request files:', request.files); // Debug log
-                          setSelectedFiles(request.files.map(file => {
-                            console.log('Processing file:', file); // Debug log
-                            return {
+                          setSelectedFiles(
+                            request.files.map((file) => ({
                               ...file,
-                              // Use the FileID to create the correct URL for database-stored files
-                              url: file.FileID && !isNaN(file.FileID) ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined
-                            };
-                          }));
+                              url:
+                                file.FileID && !isNaN(file.FileID)
+                                  ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}`
+                                  : undefined,
+                            }))
+                          );
                         } else {
                           setSelectedFiles([]);
                         }
                       }}
                     >
                       <td className="border border-gray-300 px-4 py-3">
-                        <span className="flex items-center">
-                          <FileText className="w-4 h-4 mr-2 text-blue-600" />
-                          {request.permitNumber}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="flex items-center">
+                            <FileText className="w-4 h-4 mr-2 text-blue-600" />
+                            {request.permitNumber}
+                          </span>
+                          {request.isReopened && (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium w-fit">
+                              ↺ Reopened
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-gray-800">
+                        {request.permitType}
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
                         <span className="flex items-center">
@@ -259,28 +368,13 @@ const MyRequests = () => {
                           {request.location}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-4 py-3">
-                        {request.organization}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3">
-                        {request.permitDate}
-                      </td>
+                      <td className="border border-gray-300 px-4 py-3">{request.organization}</td>
+                      <td className="border border-gray-300 px-4 py-3">{request.permitDate}</td>
                       <td className="border border-gray-300 px-4 py-3">
                         <span className="flex items-center">
                           <Clock className="w-4 h-4 mr-2 text-blue-600" />
                           {new Date(request.validUpto).toLocaleString()}
                         </span>
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3">
-                        <span className="flex items-center">
-                          <Users className="w-4 h-4 mr-2 text-blue-600" />
-                          {request.totalWorkers}
-                        </span>
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3">
-                        <div className="max-w-xs truncate" title={request.workDescription}>
-                          {request.workDescription}
-                        </div>
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
                         <span
@@ -300,9 +394,14 @@ const MyRequests = () => {
                         </span>
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
+                        <div className="max-w-xs truncate" title={request.reachedTo}>
+                          {request.reachedTo}
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
                         <button
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
-                          onClick={e => {
+                          onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/approval/${request.id}`);
                           }}
@@ -316,7 +415,7 @@ const MyRequests = () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* Additional Info Section */}
           {filteredRequests.length > 0 && (
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">

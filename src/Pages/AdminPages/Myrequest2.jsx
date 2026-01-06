@@ -39,7 +39,7 @@ const MyRequests2 = () => {
         
         // Transform API data to match component structure
         const transformedData = data.map(permit => ({
-          id: permit.PermitID,
+          id: permit.PermitId,
           permitNumber: permit.PermitNumber,
           location: permit.WorkLocation,
           permitDate: new Date(permit.PermitDate).toLocaleDateString(),
@@ -54,7 +54,8 @@ const MyRequests2 = () => {
           status: permit.CurrentPermitStatus,
           createdOn: permit.Created_on,
           updatedOn: permit.Updated_on,
-          files: permit.Files || [] // Files array from the API
+          files: permit.Files || [], // Files array from the API
+          permitType: permit.PermitType || [] // Files array from the API
         }));
         
         setRequests(transformedData);
@@ -190,6 +191,9 @@ const MyRequests2 = () => {
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Permit Number
                   </th>
+                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                    Permit Type
+                  </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Location
                   </th>
@@ -253,6 +257,9 @@ const MyRequests2 = () => {
                           <FileText className="w-4 h-4 mr-2 text-blue-600" />
                           {request.permitNumber}
                         </span>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-gray-800">
+                        {request.permitType}
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
                         <span className="flex items-center">

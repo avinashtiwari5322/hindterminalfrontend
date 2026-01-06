@@ -18,6 +18,9 @@ const MyRequests3 = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(null);
   const navigate = useNavigate();
 
   // Add state for action menu
@@ -25,13 +28,8 @@ const MyRequests3 = () => {
   // Add state to track selected request's files
   const [selectedFiles, setSelectedFiles] = useState([]);
   const { userId } = useParams();
-  let fetchUrl = '';
-  if(userId) {
-    fetchUrl = `https://hindterminal56.onrender.com/api/permits?UserId=${userId}`;
-  }
-  else {
-    fetchUrl = `https://hindterminal56.onrender.com/api/permits`;
-  }
+  // The API now expects a POST and accepts an optional locationId
+  // We'll send { UserId } when userId is present and include locationId from localStorage if available
   
 
   // Fetch data from API
@@ -39,17 +37,35 @@ const MyRequests3 = () => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const response = await fetch(fetchUrl);
+        const payload = {};
+        if (userId) payload.UserId = userId;
+        const storedLocation = localStorage.getItem('locationId');
+        if (storedLocation) payload.locationId = storedLocation;
+        // include pagination
+        payload.page = page;
+        payload.pageSize = pageSize;
+
+        const response = await fetch('https://hindterminal56.onrender.com/api/permit-list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        
+
+        // Support both legacy array responses and new paginated responses
+        const items = Array.isArray(data) ? data : (data.data || []);
+        if (data && typeof data.total !== 'undefined') setTotal(data.total);
+        if (data && typeof data.page !== 'undefined') setPage(data.page);
+        if (data && typeof data.pageSize !== 'undefined') setPageSize(data.pageSize);
+
         // Transform API data to match component structure
-        const transformedData = data.map(permit => ({
-          id: permit.PermitID,
+        const transformedData = items.map(permit => ({
+          id: permit.PermitId,
           permitNumber: permit.PermitNumber,
           location: permit.WorkLocation,
           permitDate: new Date(permit.PermitDate).toLocaleDateString(),
@@ -62,9 +78,12 @@ const MyRequests3 = () => {
           nearestFireAlarmPoint: permit.NearestFireAlarmPoint,
           // Since the API doesn't have status field, we'll determine it based on dates
           status: permit.CurrentPermitStatus,
+          reachedTo: permit.permitReachTo,
           createdOn: permit.Created_on,
           updatedOn: permit.Updated_on,
-          files: permit.Files || [] // Files array from the API
+          files: permit.Files || [], // Files array from the API
+          permitType: permit.PermitType, // Include PermitType in transformed data
+          isReopened: permit.IsReopened === true,
         }));
         
         setRequests(transformedData);
@@ -76,7 +95,7 @@ const MyRequests3 = () => {
     };
 
     fetchRequests();
-  }, []);
+  }, [userId, page, pageSize]);
 
   // Add click outside handler to close menu
   useEffect(() => {
@@ -183,6 +202,9 @@ const MyRequests3 = () => {
                 <option value="All">All</option>
                 <option value="Active">Active</option>
                 <option value="Expired">Expired</option>
+                <option value="Approved">Approved</option>
+                <option value="Hold">Hold</option>
+                <option value="Reject">Reject</option>
               </select>
             </div>
           </div>
@@ -191,7 +213,7 @@ const MyRequests3 = () => {
         {/* Requests Table */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Permit Requests ({filteredRequests.length})
+            Permit Requests ({total ?? filteredRequests.length})
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
@@ -199,6 +221,9 @@ const MyRequests3 = () => {
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Permit Number
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                    Permit Type
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Location
@@ -212,25 +237,29 @@ const MyRequests3 = () => {
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Valid Up To
                   </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                  {/* <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Workers
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                  </th> */}
+                  {/* <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Description
-                  </th>
+                  </th> */}
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Status
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
+                    Submitted By
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-800">
                     Actions
                   </th>
+                  
                 </tr>
               </thead>
               <tbody>
                 {filteredRequests.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="10"
                       className="border border-gray-300 px-4 py-3 text-center text-gray-600"
                     >
                       No requests found for the selected status.
@@ -256,10 +285,20 @@ const MyRequests3 = () => {
                       }}
                     >
                       <td className="border border-gray-300 px-4 py-3">
-                        <span className="flex items-center">
-                          <FileText className="w-4 h-4 mr-2 text-blue-600" />
-                          {request.permitNumber}
-                        </span>
+  <div className="flex flex-col gap-1">
+    <span className="flex items-center">
+      <FileText className="w-4 h-4 mr-2 text-blue-600" />
+      {request.permitNumber}
+    </span>
+    {request.isReopened && (
+      <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium w-fit">
+        ↺ Reopened
+      </span>
+    )}
+  </div>
+</td>
+                      <td className="border border-gray-300 px-4 py-3 text-gray-800">
+                        {request.permitType}
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
                         <span className="flex items-center">
@@ -279,17 +318,17 @@ const MyRequests3 = () => {
                           {new Date(request.validUpto).toLocaleString()}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-4 py-3">
+                      {/* <td className="border border-gray-300 px-4 py-3">
                         <span className="flex items-center">
                           <Users className="w-4 h-4 mr-2 text-blue-600" />
                           {request.totalWorkers}
                         </span>
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3">
+                      </td> */}
+                      {/* <td className="border border-gray-300 px-4 py-3">
                         <div className="max-w-xs truncate" title={request.workDescription}>
                           {request.workDescription}
                         </div>
-                      </td>
+                      </td> */}
                       <td className="border border-gray-300 px-4 py-3">
                         <span
                           className={`px-2 py-1 rounded-full text-sm font-medium ${
@@ -308,6 +347,11 @@ const MyRequests3 = () => {
                         </span>
                       </td>
                       <td className="border border-gray-300 px-4 py-3">
+                        <div className="max-w-xs truncate" title={request.reachedTo}>
+                          {request.reachedTo}
+                        </div>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3">
                         <button
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                           onClick={e => {
@@ -319,6 +363,7 @@ const MyRequests3 = () => {
                           View
                         </button>
                       </td>
+                      
                     </tr>
                   ))
                 )}
@@ -326,6 +371,70 @@ const MyRequests3 = () => {
             </table>
           </div>
           
+          {/* Pagination Controls */}
+          <div className="mt-4 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Showing</span>
+              <span className="font-medium">{Math.min((page - 1) * pageSize + 1, (total ?? requests.length) || 0)}</span>
+              <span>to</span>
+              <span className="font-medium">{Math.min(page * pageSize, total ?? requests.length)}</span>
+              <span>of</span>
+              <span className="font-medium">{total ?? requests.length}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className={`px-3 py-1 rounded border ${page === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  Prev
+                </button>
+
+                {/* Page numbers - show a sliding window */}
+                {(() => {
+                  const totalPages = Math.max(1, Math.ceil((total ?? requests.length) / pageSize));
+                  const windowSize = 5;
+                  let start = Math.max(1, page - 2);
+                  let end = Math.min(totalPages, start + windowSize - 1);
+                  if (end - start + 1 < windowSize) start = Math.max(1, end - windowSize + 1);
+                  const pages = [];
+                  for (let i = start; i <= end; i++) pages.push(i);
+                  return pages.map(pn => (
+                    <button
+                      key={pn}
+                      onClick={() => setPage(pn)}
+                      className={`px-3 py-1 rounded border ${pn === page ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50'}`}
+                    >
+                      {pn}
+                    </button>
+                  ));
+                })()}
+
+                <button
+                  onClick={() => setPage(p => Math.min(Math.ceil((total ?? requests.length) / pageSize), p + 1))}
+                  disabled={page * pageSize >= (total ?? requests.length)}
+                  className={`px-3 py-1 rounded border ${page * pageSize >= (total ?? requests.length) ? 'bg-gray-100 text-gray-400' : 'bg-white hover:bg-gray-50'}`}
+                >
+                  Next
+                </button>
+              </div>
+
+              <div className="ml-2">
+                <label className="text-sm text-gray-600 mr-2">Page Size</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                  className="px-2 py-1 border rounded text-sm"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+          </div>
           {/* Additional Info Section */}
           {filteredRequests.length > 0 && (
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">

@@ -1277,22 +1277,26 @@ const HeightWorkPermit2 = (props) => {
   Print
 </button>
 
-<button
-  onClick={handleHoldClick}
-  className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium" style={{ marginLeft: "10px" }}
->
-  Hold
-</button>
+        {!["closed", "closer pending"].includes(formData.status?.toLowerCase()) && (
+          <button
+            onClick={handleHoldClick}
+            className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium" style={{ marginLeft: "10px" }}
+          >
+            Hold
+          </button>
+        )}
 </div>
 
 
         <div className="flex justify-center space-x-4">
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-          >
-            Submit for Approval
-          </button>
+          {!["closed", "closer pending"].includes(formData.status?.toLowerCase()) && (
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            >
+              Submit for Approval
+            </button>
+          )}
         </div>
       </div>
     </div>

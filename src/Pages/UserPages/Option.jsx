@@ -34,7 +34,7 @@ const PermitOptions = () => {
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Height Work Permit</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Work Permit</h1>
           <p className="text-gray-600">Choose an option to continue</p>
         </div>
 
@@ -42,7 +42,7 @@ const PermitOptions = () => {
         <div className="space-y-4">
           {/* Check Permit Status Button */}
           <button
-            onClick={handleCheckStatus}
+          onClick={handlechangeapproval}
             className="w-full p-6 bg-white border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 group"
           >
             <div className="flex items-center justify-between">
@@ -51,7 +51,7 @@ const PermitOptions = () => {
                   <FileText className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="text-left">
-                  <button onClick={handlechangeapproval} className="text-lg font-semibold text-gray-800">Check Your Permit Status</button>
+                  <h3 className="text-lg font-semibold text-gray-800">Check Your Permit Status</h3>
                   <p className="text-sm text-gray-600">View existing permit details and status</p>
                 </div>
               </div>
