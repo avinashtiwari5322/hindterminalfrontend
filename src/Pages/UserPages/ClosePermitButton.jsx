@@ -31,7 +31,7 @@ const ClosePermitButton = ({ permitId, permitNumber, permitTypeId, currentStatus
         formData.append("files", file);
       });
 
-      const response = await fetch("https://hindterminal56.onrender.com/api/permits/close", {
+      const response = await fetch("http://localhost:4000/api/permits/close", {
         method: "POST",
         body: formData,
       });

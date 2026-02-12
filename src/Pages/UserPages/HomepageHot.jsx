@@ -15,6 +15,8 @@ import {
 import { toast } from 'react-toastify';
 import hindLogo from "../../Assets/hindimg.png";
 import Modal from "react-modal";
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 
 const HotWorkPermit4 = () => {
@@ -70,9 +72,16 @@ const HotWorkPermit4 = () => {
   const [adminUploadLoading, setAdminUploadLoading] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
 
+  const convertUTCToIST = (utcDateTime) => {
+    if (!utcDateTime) return "";
+    const istTimeZone = 'Asia/Kolkata';
+    const zonedTime = toZonedTime(utcDateTime, istTimeZone);
+    return format(zonedTime, 'yyyy-MM-dd HH:mm:ss');
+  };
+
   useEffect(() => {
     if (isAdminView && id) {
-      fetch(`https://hindterminal56.onrender.com/api/permits/${id}`)
+      fetch(`http://localhost:4000/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.AdminDocuments && Array.isArray(data.AdminDocuments) && data.AdminDocuments.length > 0) {
@@ -149,31 +158,31 @@ const HotWorkPermit4 = () => {
             issuer: {
               name: data?.IssuerUser?.Name || "",
               designation: data.IssuerUser?.Designation || "",
-              dateTime: data?.Issuer_DateTime ? data.Issuer_DateTime.slice(0, 16) : "",
+              dateTime: data?.Issuer_DateTime ? convertUTCToIST(data.Issuer_DateTime) : "",
               updatedBy: data?.Issuer_UpdatedBy || ""
             },
             receiver: {
               name: data.ReceiverUser?.Name || "",
               designation: data.ReceiverUser?.Designation || "",
-              dateTime: data.Receiver_DateTime ? data.Receiver_DateTime.slice(0, 16) : "",
+              dateTime: data.Receiver_DateTime ? convertUTCToIST(data.Receiver_DateTime) : "",
               updatedBy: data.ReceiverUser?.UpdatedBy || ""
             },
             energyIsolate: {
               name: data?.EnergyIsolateUser?.Name || "",
               designation: data?.EnergyIsolateUser?.Designation || "",
-              dateTime: data?.EnergyIsolate_DateTime ? data.EnergyIsolate_DateTime.slice(0, 16) : "",
+              dateTime: data?.EnergyIsolate_DateTime ? convertUTCToIST(data.EnergyIsolate_DateTime) : "",
               updatedBy: data?.EnergyIsolateUser?.UpdatedBy || ""
             },
             reviewer: {
               name: data?.ReviewerUser?.Name || "",
               designation: data?.ReviewerUser?.Designation || "",
-              dateTime: data?.Reviewer_DateTime ? data.Reviewer_DateTime.slice(0, 16) : "",
+              dateTime: data?.Reviewer_DateTime ? convertUTCToIST(data.Reviewer_DateTime) : "",
               updatedBy: data?.ReviewerUser?.UpdatedBy || ""
             },
             approver: {
               name: data?.ApproverUser?.Name || "",
               designation: data?.ApproverUser?.Designation || "",
-              dateTime: data?.Approver_DateTime ? data.Approver_DateTime.slice(0, 16) : "",
+              dateTime: data?.Approver_DateTime ? convertUTCToIST(data.Approver_DateTime) : "",
               updatedBy: data?.ApproverUser?.UpdatedBy || ""
             },
             files: (data.Files || []).map((file) => ({
@@ -181,12 +190,12 @@ const HotWorkPermit4 = () => {
               name: file.FileName || file.originalName,
               size: file.FileSize || file.size,
               type: file.FileType || file.mimetype,
-              url: file.FilePath ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
+              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
             })),
           }));
            // Fetch close documents if status is closed or closer pending
-          if (["close", "closer pending"].includes(data.CurrentPermitStatus?.toLowerCase())) {
+          if (["closed", "closer pending"].includes(data.CurrentPermitStatus?.toLowerCase())) {
             fetchCloseDocuments();
           }
         })
@@ -199,7 +208,7 @@ const HotWorkPermit4 = () => {
   // Fetch Close Documents
   const fetchCloseDocuments = async () => {
       try {
-        const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/close-document`);
+        const response = await fetch(`http://localhost:4000/api/permits/${id}/close-document`);
         if (!response.ok) throw new Error("Failed to fetch close documents");
   
         const result = await response.json();
@@ -295,7 +304,7 @@ const HotWorkPermit4 = () => {
         form.append("files", file);
       });
 
-      const response = await fetch("https://hindterminal56.onrender.com/api/permits/close", {
+      const response = await fetch("http://localhost:4000/api/permits/close", {
         method: "POST",
         body: form,
       });
@@ -493,7 +502,7 @@ const HotWorkPermit4 = () => {
 
   const approval = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/approve', {
+      const response = await fetch('http://localhost:4000/api/permits/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id), PermitTypeId: formData.PermitTypeId, UserId: user?.UserId })
@@ -508,7 +517,7 @@ const HotWorkPermit4 = () => {
 
   const closePermit = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/close', {
+      const response = await fetch('http://localhost:4000/api/permits/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id), PermitTypeId: formData.PermitTypeId })
@@ -528,7 +537,7 @@ const HotWorkPermit4 = () => {
     }
 
     try {
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/reject`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: formData.reason, PermitTypeId: formData.PermitTypeId })
@@ -553,7 +562,7 @@ const HotWorkPermit4 = () => {
     }
 
     try {
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/hold`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}/hold`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: formData.reason, PermitTypeId: formData.PermitTypeId })
@@ -586,7 +595,7 @@ const HotWorkPermit4 = () => {
       form.append('PermitId', id);
       form.append('UserId', user?.UserId || user?.id || '');
       form.append('file', file);
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/admin-document', {
+      const response = await fetch('http://localhost:4000/api/permits/admin-document', {
         method: 'POST',
         body: form,
       });
@@ -661,7 +670,7 @@ const HotWorkPermit4 = () => {
         }
       });
 
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
         method: "PUT",
         body: form,
       });
@@ -1256,7 +1265,7 @@ const HotWorkPermit4 = () => {
                     <td className="border border-gray-300 px-4 py-3">
                       <input
                         type="datetime-local"
-                        value={formData[section].dateTime }
+                        value={formData[section].dateTime}
                         onChange={(e) => canEditWorkAuthorized && handleWorkflowChange(section, "dateTime", e.target.value)}
                         className="w-full px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         readOnly={!canEditWorkAuthorized}
@@ -1303,7 +1312,7 @@ const HotWorkPermit4 = () => {
           </div>
         </div>
         {/* Close Permit Document Section */}
-        {(formData.status?.toLowerCase() === "close" || formData.status?.toLowerCase() === "closer pending") && closeDocuments.length > 0 && (
+        {(formData.status?.toLowerCase() === "closed" || formData.status?.toLowerCase() === "closer pending") && closeDocuments.length > 0 && (
                   <div className="bg-white rounded-lg shadow-lg p-8 mb-12 border border-gray-200">
                     <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                       <FileText className="w-8 h-8 text-red-600" />
@@ -1427,7 +1436,7 @@ const HotWorkPermit4 = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {adminDocuments.map((doc, idx) => {
                       const fileName = doc.FileName || doc.originalName || 'File';
-                      const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                      const fileUrl = `http://localhost:4000/api/permits/${id}/admin-document`;
                       return (
                         <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
@@ -1499,8 +1508,7 @@ const HotWorkPermit4 = () => {
                     disabled={closingPermit}
                     className="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 font-medium"
                   >
-                    <XCircle className="w-5 h-5
-                     mr-2" />
+                    <XCircle className="w-5 h-5 mr-2" />
                     {closingPermit ? "Closing..." : "Close Permit"}
                   </button>
                 )}
@@ -1522,7 +1530,7 @@ const HotWorkPermit4 = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {adminDocuments.map((doc, idx) => {
                       const fileName = doc.FileName || doc.originalName || 'File';
-                      const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                      const fileUrl = `http://localhost:4000/api/permits/${id}/admin-document`;
                       return (
                         <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
@@ -1583,7 +1591,7 @@ const HotWorkPermit4 = () => {
               Reject
             </button>
             
-            
+            <div className="flex justify-center space-x-4 mt-4">
             {/* Close Permit Button - Only for "closer pending" */}
             {showCloseButton && (
               <button
@@ -1595,6 +1603,7 @@ const HotWorkPermit4 = () => {
                 {closingPermit ? "Closing..." : "Close Permit"}
               </button>
             )}
+          </div>
           </div>
         )}
         {/* Close Permit Modal */}
@@ -1614,7 +1623,7 @@ const HotWorkPermit4 = () => {
                 <input type="radio" name="upload" value="yes" checked={uploadChoice === "yes"} onChange={() => setUploadChoice("yes")} className="mr-2" />
                 <span>Yes</span>
               </label>
-              <label className="flex items-center cursor-pointer">
+                           <label className="flex items-center cursor-pointer">
                 <input type="radio" name="upload" value="no" checked={uploadChoice === "no"} onChange={() => setUploadChoice("no")} className="mr-2" />
                 <span>No</span>
               </label>
@@ -1635,7 +1644,7 @@ const HotWorkPermit4 = () => {
                   onChange={handleCloseFileChange}
                   className="hidden"
                 />
-                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600">Click to upload images</p>
                 <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF supported</p>
               </div>

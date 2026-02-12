@@ -59,7 +59,7 @@ const ViewPermit = () => {
     if (!permitId) return;
     setLoading(true);
     try {
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${permitId}`);
+      const response = await fetch(`http://localhost:4000/api/permits/${permitId}`);
       if (!response.ok) throw new Error("Failed to fetch permit data");
       const data = await response.json();
 
@@ -88,8 +88,8 @@ const ViewPermit = () => {
           name: file.FileName || file.originalName,
           size: file.FileSize || file.size,
           type: file.FileType || file.mimetype,
-          url: file.FilePath ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined,
-          preview: file.FileType?.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
+          url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
+          preview: file.FileType?.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
         })),
       });
     } catch (err) {
@@ -109,7 +109,7 @@ const ViewPermit = () => {
   // Fetch close documents when permit is closed
   const fetchCloseDocuments = async () => {
         try {
-          const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${currentId}/close-document`);
+          const response = await fetch(`http://localhost:4000/api/permits/${currentId}/close-document`);
           if (!response.ok) throw new Error("Failed to fetch close documents");
     
           const result = await response.json();
@@ -191,7 +191,7 @@ const ViewPermit = () => {
 
   // Load close documents when status becomes "close"
   useEffect(() => {
-    if (permitData.CurrentPermitStatus?.toLowerCase() === "close" || permitData.CurrentPermitStatus?.toLowerCase() === "closer pending") {
+    if (permitData.CurrentPermitStatus?.toLowerCase() === "closed" || permitData.CurrentPermitStatus?.toLowerCase() === "closer pending") {
       fetchCloseDocuments();
     } else {
       setCloseDocuments([]);
@@ -211,7 +211,7 @@ const ViewPermit = () => {
         formData.append("files", file); // Support multiple files
       });
 
-      const response = await fetch("https://hindterminal56.onrender.com/api/permits/close", {
+      const response = await fetch("http://localhost:4000/api/permits/close", {
         method: "POST",
         body: formData,
       });
@@ -443,7 +443,7 @@ const ViewPermit = () => {
             </div>
           )}
           
-          {(permitData.CurrentPermitStatus?.toLowerCase() === "close" || permitData.CurrentPermitStatus?.toLowerCase() === "closer pending") && (
+          {(permitData.CurrentPermitStatus?.toLowerCase() === "closed" || permitData.CurrentPermitStatus?.toLowerCase() === "closer pending") && (
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <FileText className="w-6 h-6 mr-2 text-red-600" />
@@ -581,7 +581,7 @@ const ViewPermit = () => {
                           PermitValidUpTo: reopenDate,
                         };
 
-                        const res = await fetch('https://hindterminal56.onrender.com/api/permits/reopen', {
+                        const res = await fetch('http://localhost:4000/api/permits/reopen', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify(payload),

@@ -21,7 +21,7 @@ const Home2 = () => {
 
   const generatePermitNumber = async () => {
     try {
-      const response = await fetch("https://hindterminal56.onrender.com/api/last-permit-number");
+      const response = await fetch("http://localhost:4000/api/last-permit-number");
       const data = await response.json();
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -133,12 +133,13 @@ const Home2 = () => {
     const fetchDropdownData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const payload = { CompanyId: 1, UserId: user?.UserId || 7 };
+        const locationId = localStorage.getItem('locationId') || '';
+        const payload = { CompanyId: 1, UserId: user?.UserId, LocationId: locationId };
 
         const [alarmRes, workLocRes, deptRes] = await Promise.all([
-          axios.post("https://hindterminal56.onrender.com/api/alarm-point/list", payload),
-          axios.post("https://hindterminal56.onrender.com/api/work-location/list", payload),
-          axios.post("https://hindterminal56.onrender.com/api/department/list", payload)
+          axios.post("http://localhost:4000/api/alarm-point/list", payload),
+          axios.post("http://localhost:4000/api/work-location/list", payload),
+          axios.post("http://localhost:4000/api/department/list", payload)
         ]);
 
         setAlarmPoints(alarmRes.data.data || []);
@@ -171,7 +172,7 @@ const Home2 = () => {
   useEffect(() => {
     const fetchPermitTypes = async () => {
       try {
-        const response = await axios.get("https://hindterminal56.onrender.com/api/permit-types");
+        const response = await axios.get("http://localhost:4000/api/permit-types");
         const formattedData = response.data.map((type) => ({
           id: type.PermitTypeId,
           name: type.PermitType,
@@ -291,7 +292,7 @@ const Home2 = () => {
     const apiFormData = new FormData();
     apiFormData.append('UserId', userId);
     apiFormData.append('PermitDate', formData.permitDate);
-    apiFormData.append('Location', localStorage.getItem("locationId") || '');
+    apiFormData.append('LocationId', localStorage.getItem("locationId") || '');
     // apiFormData.append('NearestFireAlarmPoint', formData.fireAlarmPoint || '');
     apiFormData.append('PermitNumber', formData.permitNumber);
     apiFormData.append('TotalEngagedWorkers', parseInt(formData.totalWorkers) || 0);
@@ -345,7 +346,7 @@ const Home2 = () => {
     try {
       const formDataToSend = prepareFormData();
       const response = await axios.post(
-        "https://hindterminal56.onrender.com/api/permits",
+        "http://localhost:4000/api/permits",
         formDataToSend,
         {
           headers: {

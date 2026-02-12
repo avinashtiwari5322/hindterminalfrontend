@@ -24,7 +24,7 @@ const SuperUserPage = () => {
   };
 
   const handleSeeMasterData = () => {
-    navigate('/super/master-data'); // Adjust route as needed
+    navigate('/super/usermaster'); // Adjust route as needed
   };
 
   return (

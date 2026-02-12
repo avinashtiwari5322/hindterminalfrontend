@@ -15,6 +15,8 @@ import {
 import hindLogo from "../../Assets/hindimg.png";
 import { toast } from 'react-toastify';
 import Modal from "react-modal";
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 const HeightWorkPermit = () => {
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -68,9 +70,15 @@ const HeightWorkPermit = () => {
   const [adminUploadLoading, setAdminUploadLoading] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
 
+  const convertUTCToIST = (utcDateTime) => {
+    if (!utcDateTime) return "";
+    const istTimeZone = 'Asia/Kolkata';
+    const zonedTime = toZonedTime(utcDateTime, istTimeZone);
+    return format(zonedTime, 'yyyy-MM-dd HH:mm:ss');
+  };
   useEffect(() => {
     if (isAdminView && id) {
-      fetch(`https://hindterminal56.onrender.com/api/permits/${id}`)
+      fetch(`http://localhost:4000/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.AdminDocuments && Array.isArray(data.AdminDocuments) && data.AdminDocuments.length > 0) {
@@ -143,31 +151,31 @@ const HeightWorkPermit = () => {
             issuer: {
               name: data?.IssuerUser?.Name || "",
               designation: data.IssuerUser?.Designation || "",
-              dateTime: data?.Issuer_DateTime ? data.Issuer_DateTime.slice(0, 16) : "",
+              dateTime: data?.Issuer_DateTime ? convertUTCToIST(data.Issuer_DateTime) : "",
               updatedBy: data?.Issuer_UpdatedBy || ""
             },
             receiver: {
               name: data.ReceiverUser?.Name || "",
               designation: data.ReceiverUser?.Designation || "",
-              dateTime: data.Receiver_DateTime ? data.Receiver_DateTime.slice(0, 16) : "",
+              dateTime: data.Receiver_DateTime ? convertUTCToIST(data.Receiver_DateTime) : "",
               updatedBy: data.ReceiverUser?.UpdatedBy || ""
             },
             energyIsolate: {
               name: data?.EnergyIsolateUser?.Name || "",
               designation: data?.EnergyIsolateUser?.Designation || "",
-              dateTime: data?.EnergyIsolate_DateTime ? data.EnergyIsolate_DateTime.slice(0, 16) : "",
+              dateTime: data?.EnergyIsolate_DateTime ? convertUTCToIST(data.EnergyIsolate_DateTime) : "",
               updatedBy: data?.EnergyIsolateUser?.UpdatedBy || ""
             },
             reviewer: {
               name: data?.ReviewerUser?.Name || "",
               designation: data?.ReviewerUser?.Designation || "",
-              dateTime: data?.Reviewer_DateTime ? data.Reviewer_DateTime.slice(0, 16) : "",
+              dateTime: data?.Reviewer_DateTime ? convertUTCToIST(data.Reviewer_DateTime) : "",
               updatedBy: data?.ReviewerUser?.UpdatedBy || ""
             },
             approver: {
               name: data?.ApproverUser?.Name || "",
               designation: data?.ApproverUser?.Designation || "",
-              dateTime: data?.Approver_DateTime ? data.Approver_DateTime.slice(0, 16) : "",
+              dateTime: data?.Approver_DateTime ? convertUTCToIST(data.Approver_DateTime) : "",
               updatedBy: data?.ApproverUser?.UpdatedBy || ""
             },
             files: (data.Files || []).map((file) => ({
@@ -175,12 +183,12 @@ const HeightWorkPermit = () => {
               name: file.FileName,
               size: file.FileSize,
               type: file.FileType,
-              url: `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}`,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
+              url: `http://localhost:4000/api/permits/file/${file.FileID}`,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
             })),
           }));
           // Fetch close documents if status is closed or closer pending
-          if (["close", "closer pending"].includes(data.CurrentPermitStatus?.toLowerCase())) {
+          if (["closed", "closer pending"].includes(data.CurrentPermitStatus?.toLowerCase())) {
             fetchCloseDocuments();
           }
         })
@@ -193,7 +201,7 @@ const HeightWorkPermit = () => {
   // Fetch Close Documents
   const fetchCloseDocuments = async () => {
       try {
-        const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/close-document`);
+        const response = await fetch(`http://localhost:4000/api/permits/${id}/close-document`);
         if (!response.ok) throw new Error("Failed to fetch close documents");
   
         const result = await response.json();
@@ -289,7 +297,7 @@ const HeightWorkPermit = () => {
         form.append("files", file);
       });
 
-      const response = await fetch("https://hindterminal56.onrender.com/api/permits/close", {
+      const response = await fetch("http://localhost:4000/api/permits/close", {
         method: "POST",
         body: form,
       });
@@ -482,7 +490,7 @@ const HeightWorkPermit = () => {
 
   const approval = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/approve', {
+      const response = await fetch('http://localhost:4000/api/permits/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id), PermitTypeId: formData.PermitTypeId, UserId: user?.UserId })
@@ -497,7 +505,7 @@ const HeightWorkPermit = () => {
 
   const closePermit = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/close', {
+      const response = await fetch('http://localhost:4000/api/permits/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id), PermitTypeId: formData.PermitTypeId })
@@ -517,7 +525,7 @@ const HeightWorkPermit = () => {
     }
 
     try {
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/reject`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}/reject`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: formData.reason, PermitTypeId: formData.PermitTypeId })
@@ -542,7 +550,7 @@ const HeightWorkPermit = () => {
     }
 
     try {
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}/hold`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}/hold`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: formData.reason, PermitTypeId: formData.PermitTypeId })
@@ -575,7 +583,7 @@ const HeightWorkPermit = () => {
       form.append('PermitId', id);
       form.append('UserId', user?.UserId || user?.id || '');
       form.append('file', file);
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/admin-document', {
+      const response = await fetch('http://localhost:4000/api/permits/admin-document', {
         method: 'POST',
         body: form,
       });
@@ -650,7 +658,7 @@ const HeightWorkPermit = () => {
         }
       });
 
-      const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/permits/${id}`, {
         method: "PUT",
         body: form,
       });
@@ -1412,7 +1420,7 @@ const HeightWorkPermit = () => {
          
         </div>
         {/* Close Permit Document Section */}
-        {(formData.status?.toLowerCase() === "close" || formData.status?.toLowerCase() === "closer pending") && closeDocuments.length > 0 && (
+        {(formData.status?.toLowerCase() === "closed" || formData.status?.toLowerCase() === "closer pending") && closeDocuments.length > 0 && (
                   <div className="bg-white rounded-lg shadow-lg p-8 mb-12 border border-gray-200">
                     <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                       <FileText className="w-8 h-8 text-red-600" />
@@ -1539,7 +1547,7 @@ const HeightWorkPermit = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {adminDocuments.map((doc, idx) => {
                       const fileName = doc.FileName || doc.originalName || 'File';
-                      const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                      const fileUrl = `http://localhost:4000/api/permits/${id}/admin-document`;
                       return (
                         <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
@@ -1633,7 +1641,7 @@ const HeightWorkPermit = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {adminDocuments.map((doc, idx) => {
                       const fileName = doc.FileName || doc.originalName || 'File';
-                      const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                      const fileUrl = `http://localhost:4000/api/permits/${id}/admin-document`;
                       return (
                         <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
                           <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
@@ -1694,7 +1702,7 @@ const HeightWorkPermit = () => {
               Reject
             </button>
             
-            
+            <div className="flex justify-center space-x-4 mt-4">
             {/* Close Permit Button - Only for "closer pending" */}
             {showCloseButton && (
               <button
@@ -1706,6 +1714,7 @@ const HeightWorkPermit = () => {
                 {closingPermit ? "Closing..." : "Close Permit"}
               </button>
             )}
+          </div>
           </div>
         )}
         {/* Close Permit Modal */}

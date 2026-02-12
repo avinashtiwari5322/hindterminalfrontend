@@ -77,7 +77,7 @@ const HeightWorkPermit3 = (props) => {
   // Approve API call
   const approval = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/approve', {
+      const response = await fetch('http://localhost:4000/api/permits/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id) })
@@ -93,7 +93,7 @@ const HeightWorkPermit3 = (props) => {
   // Close API call
   const closePermit = async () => {
     try {
-      const response = await fetch('https://hindterminal56.onrender.com/api/permits/close', {
+      const response = await fetch('http://localhost:4000/api/permits/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ PermitId: Number(id) })
@@ -108,7 +108,7 @@ const HeightWorkPermit3 = (props) => {
   
   useEffect(() => {
     if (isAdminView && id) {
-      fetch(`https://hindterminal56.onrender.com/api/permits/${id}`)
+      fetch(`http://localhost:4000/api/permits/${id}`)
         .then((res) => res.json())
         .then((data) => {
           // If AdminDocuments present, flatten and set
@@ -202,8 +202,8 @@ const HeightWorkPermit3 = (props) => {
               name: file.FileName || file.originalName,
               size: file.FileSize || file.size,
               type: file.FileType || file.mimetype,
-              url: file.FilePath ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : undefined,
-              preview: file.FileType && file.FileType.startsWith("image/") ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}` : null,
+              url: file.FilePath ? `http://localhost:4000/api/permits/file/${file.FileID}` : undefined,
+              preview: file.FileType && file.FileType.startsWith("image/") ? `http://localhost:4000/api/permits/file/${file.FileID}` : null,
             })),
           }));
         })
@@ -997,7 +997,7 @@ const HeightWorkPermit3 = (props) => {
                           const fileName = doc.FileName || doc.originalName || 'File';
                           const fileSize = doc.FileSize || doc.size;
                           const fileType = doc.FileType || doc.mimetype || '';
-                          const fileUrl = `https://hindterminal56.onrender.com/api/permits/${id}/admin-document`;
+                          const fileUrl = `http://localhost:4000/api/permits/${id}/admin-document`;
                           return (
                             <div key={fileName + idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
                               {fileType.startsWith("image/") ? (

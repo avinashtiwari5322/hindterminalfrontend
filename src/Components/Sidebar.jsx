@@ -11,6 +11,7 @@ import {
   UserPlus,
   BarChart3,
   Grid3x3,
+  AlertTriangle,Building2,Building,Briefcase,MapPin,Users
 } from "lucide-react";
 import hindLogo from '../Assets/hindimg.png';
 
@@ -53,14 +54,28 @@ const SidebarNavbar = ({ children }) => {
     : []),
 
   // 5. Master Data / Admin Options - Optional: only for superuser
-  ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
-    ? [{ icon: Database, label: "Master Data", href: "/super/master-data" }]
-    : []),
+  // ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
+  //   ? [{ icon: Database, label: "Master Data", href: "/super/master-data" }]
+  //   : []),
 
   // 6. Register New User - Only for superuser
   // ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
   //   ? [{ icon: UserPlus, label: "Register New User", href: "/super/register-new-user" }]
   //   : []),
+ 
+
+  // Add new menu items for superuser role
+  ...(user && (user.RoleName === 'superuser' || user.RoleName === 'SuperUser')
+    ? [
+      { icon: Users, label: "User Master", href: "/super/usermaster" },
+      { icon: Building, label: "Company Master", href: "/super/companymaster" },
+      { icon: Building, label: "Department Master", href: "/super/departmentmaster" },
+      { icon: Briefcase, label: "Designation Master", href: "/super/designationmaster" },
+      { icon: AlertTriangle, label: "Alarm Point Master", href: "/super/alarmpointmaster" },
+      { icon: MapPin, label: "Work Location Master", href: "/super/worklocationmaster" },
+        { icon: MapPin, label: "Location Master", href: "/super/locationmaster" },
+      ]
+    : []),
 ];
 
   // Logout handler
@@ -107,25 +122,13 @@ const SidebarNavbar = ({ children }) => {
           </div>
 
           {/* Right side of navbar */}
-          {/* <div className="flex items-center space-x-3">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 w-64 bg-slate-700 rounded-lg border-0 focus:ring-2 focus:ring-lime-400 focus:bg-slate-600 transition-all duration-200 text-white placeholder-slate-400"
-              />
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-lg font-bold text-white bg-lime-500 px-3 py-1 rounded-full shadow-md">
+                Location: {localStorage.getItem('locationName') || 'Unknown'}
+              </h1>
             </div>
-
-            <button className="p-2 rounded-lg hover:bg-slate-700 transition-colors duration-200 relative">
-              <Bell className="w-5 h-5 text-slate-300" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-lime-400 rounded-full"></span>
-            </button>
-
-            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200">
-              <User className="w-5 h-5 text-white" />
-            </div>
-          </div> */}
+          </div>
         </div>
       </nav>
 

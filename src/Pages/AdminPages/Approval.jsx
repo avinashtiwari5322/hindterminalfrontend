@@ -7,18 +7,23 @@ import {
   Users,
   Loader2,
   AlertCircle,
+  Download,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const MyRequests = () => {
   const [statusFilter, setStatusFilter] = useState("All");
   const [locationFilter, setLocationFilter] = useState(null); // New: location filter
+  const [fromDate, setFromDate] = useState(""); // New: from date
+  const [toDate, setToDate] = useState(""); // New: to date
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
 
   const [actionMenuId, setActionMenuId] = useState(null);
@@ -38,63 +43,81 @@ const MyRequests = () => {
   const isSuperUser = user?.RoleName === "superuser" ;
 
   // Load default location from localStorage
- useEffect(() => {
-  const storedLocation = localStorage.getItem("locationId");
-
-  // Only set if there's actually a value
-  if (storedLocation && storedLocation.trim() !== "") {
-    setLocationFilter(storedLocation);
-  }
-  // Do NOTHING if no stored location — keep default "" (which means "All")
-}, []);
-// Fetch locations from API
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        setLocationLoading(true);
-        setLocationError("");
+    const storedLocation = Number(localStorage.getItem("locationId"));
 
-        const response = await fetch("https://hindterminal56.onrender.com/api/location-master", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+    // Only set if there's actually a value
+    if (storedLocation ) {
+      setLocationFilter(storedLocation);
+    }
+    // Do NOTHING if no stored location — keep default "" (which means "All")
+  }, []);
+  // Fetch locations from API
+    useEffect(() => {
+      const fetchLocations = async () => {
+        try {
+          setLocationLoading(true);
+          setLocationError("");
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch locations");
+          const response = await fetch("http://localhost:4000/api/location-master", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch locations");
+          }
+
+          const result = await response.json();
+
+          if (result.success && Array.isArray(result.data)) {
+            setLocations(result.data.map(loc => ({
+              id: loc.LocationId,
+              name: loc.LocationName
+            })));
+          } else {
+            throw new Error("Invalid location data");
+          }
+        } catch (err) {
+          console.error("Error fetching locations:", err);
+          setLocationError("Failed to load locations");
+          setLocations([]); // fallback
+        } finally {
+          setLocationLoading(false);
         }
+      };
 
-        const result = await response.json();
+      fetchLocations();
+    }, []);
 
-        if (result.success && Array.isArray(result.data)) {
-          setLocations(result.data); // [{ LocationName: "Palwal" }, ...]
-        } else {
-          throw new Error("Invalid location data");
-        }
-      } catch (err) {
-        console.error("Error fetching locations:", err);
-        setLocationError("Failed to load locations");
-        setLocations([]); // fallback
-      } finally {
-        setLocationLoading(false);
-      }
-    };
+  // Ensure locationId is valid before setting it
+  useEffect(() => {
+    const storedLocation = localStorage.getItem("locationId");
+    const parsedLocation = storedLocation ? Number(storedLocation) : null;
 
-    fetchLocations();
+    if (!isNaN(parsedLocation) && parsedLocation !== null) {
+      setLocationFilter(parsedLocation); // Set only if valid
+    }
   }, []);
 
   // Fetch data from API whenever page, pageSize, or locationFilter changes
   useEffect(() => {
-    if (locationFilter) {
+    if (locationFilter !== null) {
+      console.log("Location filter changed, fetching requests for location:", locationFilter);
       const fetchRequests = async () => {
       try {
         setLoading(true);
         const payload = {
           page,
           pageSize,
-          locationId: locationFilter,
+          locationId: locationFilter, // Ensure locationId is valid
         };
+        if (statusFilter !== "All") payload.status = statusFilter;
+        if (fromDate) payload.fromDate = fromDate;
+        if (toDate) payload.toDate = toDate;
         console.log("Fetching requests with payload:", payload);
-        const response = await fetch("https://hindterminal56.onrender.com/api/permit-list", {
+
+        const response = await fetch("http://localhost:4000/api/permit-list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -114,7 +137,7 @@ const MyRequests = () => {
         const transformedData = items.map((permit) => ({
           id: permit.PermitId,
           permitNumber: permit.PermitNumber,
-          location: permit.WorkLocation,
+          location: getLocationValue(permit.WorkLocation),
           permitDate: new Date(permit.PermitDate).toLocaleDateString(),
           validUpto: permit.PermitValidUpTo,
           totalWorkers: permit.TotalEngagedWorkers,
@@ -143,7 +166,7 @@ const MyRequests = () => {
     fetchRequests();
     }
 
-  }, [page, pageSize, locationFilter]); // Re-fetch when location changes
+  }, [page, pageSize, locationFilter, statusFilter, fromDate, toDate]); // Re-fetch when filters change
 
   // Close action menu on outside click
   useEffect(() => {
@@ -154,11 +177,89 @@ const MyRequests = () => {
     }
   }, [actionMenuId]);
 
+  // Helper function to extract location from array
+  const getLocationValue = (location) => {
+    if (Array.isArray(location)) {
+      return location.find(loc => loc !== null && loc !== undefined) || "";
+    }
+    return location || "";
+  };
+
   // Filter requests by status (client-side)
-  const filteredRequests =
-    statusFilter === "All"
-      ? requests
-      : requests.filter((request) => request.status === statusFilter);
+  const filteredRequests = requests;
+
+  // Export to Excel function
+  const handleExportToExcel = async () => {
+    try {
+      setExporting(true);
+      
+      // Prepare payload for export API
+      const payload = {
+        locationId: locationFilter,
+        export: true,
+      };
+      if (statusFilter !== "All") payload.status = statusFilter;
+      if (fromDate) payload.fromDate = fromDate;
+      if (toDate) payload.toDate = toDate;
+
+      const response = await fetch("http://localhost:4000/api/permit-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export data");
+      }
+
+      const data = await response.json();
+      const items = Array.isArray(data) ? data : data.data || [];
+
+      // Transform data for Excel
+      const excelData = items.map((permit) => ({
+        "Permit Number": permit.PermitNumber,
+        "Permit Type": permit.PermitType,
+        "Location": getLocationValue(permit.WorkLocation),
+        "Organization": permit.Organization,
+        "Permit Date": new Date(permit.PermitDate).toLocaleDateString(),
+        "Valid Up To": new Date(permit.PermitValidUpTo).toLocaleDateString(),
+        "Status": permit.CurrentPermitStatus,
+        "Submitted By": permit.permitReachTo,
+        "Reopened": permit.IsReopened ? "Yes" : "No",
+      }));
+      
+
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Permits");
+
+      // Set column widths
+      const colWidths = [
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 10 },
+      ];
+      worksheet["!cols"] = colWidths;
+
+      // Generate file name
+      const fileName = `permits_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+      // Write file
+      XLSX.writeFile(workbook, fileName);
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -193,7 +294,7 @@ const MyRequests = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -208,67 +309,115 @@ const MyRequests = () => {
 
         {/* Filter Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-6">
+          <div className="flex items-center justify-between flex-wrap gap-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-800 flex items-center">
               <Filter className="w-5 h-5 mr-2 text-blue-600" />
               Filter Requests
             </h2>
+            {isSuperUser && (
+              <button
+                onClick={handleExportToExcel}
+                disabled={exporting || requests.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                {exporting ? "Exporting..." : "Export to Excel"}
+              </button>
+            )}
+          </div>
 
-            <div className="flex flex-wrap gap-6 items-end">
-              {/* Location Filter - Only for Super Users */}
-              {isSuperUser && (
-                <div className="min-w-48">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <select
-                    value={locationFilter}
-                    onChange={(e) => {
-                      setLocationFilter(e.target.value);
-                      setPage(1);
-                    }}
-                    disabled={locationLoading}
-                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      locationLoading ? "opacity-70 cursor-not-allowed" : "border-gray-300"
-                    }`}
-                  >
-                    <option value="">
-                      {locationLoading
-                        ? "Loading locations..."
-                        : locationError
-                        ? "Error loading"
-                        : "-- All Locations --"}
-                    </option>
-                    {locations.map((loc) => (
-                      <option key={loc.LocationName} value={loc.LocationName}>
-                        {loc.LocationName}
-                      </option>
-                    ))}
-                  </select>
-                  {locationError && !locationLoading && (
-                    <p className="mt-1 text-xs text-red-600">{locationError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Status Filter */}
-              <div>
+          <div className="flex flex-wrap gap-6 items-end">
+            {/* Location Filter - Only for Super Users */}
+            {isSuperUser && (
+              <div className="min-w-48">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
+                  Location
                 </label>
                 <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={locationFilter}
+                  onChange={(e) => {
+                    setLocationFilter(Number(e.target.value)); // Ensure LocationId is passed as a number
+                    setPage(1);
+                  }}
+                  disabled={locationLoading}
+                  className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    locationLoading ? "opacity-70 cursor-not-allowed" : "border-gray-300"
+                  }`}
                 >
-                  <option value="All">All</option>
-                  <option value="Active">Active</option>
-                  <option value="Expired">Expired</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Hold">Hold</option>
-                  <option value="Reject">Reject</option>
+                  <option value="">
+                    {locationLoading
+                      ? "Loading locations..."
+                      : locationError
+                      ? "Error loading"
+                      : "-- All Locations --"}
+                  </option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}> {/* Use LocationId as value */}
+                      {loc.name}
+                    </option>
+                  ))}
                 </select>
+                {locationError && !locationLoading && (
+                  <p className="mt-1 text-xs text-red-600">{locationError}</p>
+                )}
               </div>
+            )}
+
+            {/* Date Range Filters - Only for Super Users */}
+            {isSuperUser && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    From Date
+                  </label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      setFromDate(e.target.value);
+                      setPage(1);
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    To Date
+                  </label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => {
+                      setToDate(e.target.value);
+                      setPage(1);
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="All">All</option>
+                <option value="Active">Active</option>
+                <option value="Expired">Expired</option>
+                <option value="Approved">Approved</option>
+                <option value="Hold">Hold</option>
+                <option value="Reject">Reject</option>
+              </select>
             </div>
           </div>
         </div>
@@ -337,7 +486,7 @@ const MyRequests = () => {
                               ...file,
                               url:
                                 file.FileID && !isNaN(file.FileID)
-                                  ? `https://hindterminal56.onrender.com/api/permits/file/${file.FileID}`
+                                  ? `http://localhost:4000/api/permits/file/${file.FileID}`
                                   : undefined,
                             }))
                           );
@@ -416,6 +565,90 @@ const MyRequests = () => {
             </table>
           </div>
 
+          {/* Pagination Section */}
+          {total && (
+            <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
+              <div className="text-sm text-gray-600">
+                Showing {(page - 1) * pageSize + 1} to{" "}
+                {Math.min(page * pageSize, total)} of {total} results
+              </div>
+              <div className="flex gap-2 items-center flex-wrap">
+                <button
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-2">
+                  {Array.from({
+                    length: Math.ceil(total / pageSize),
+                  }).map((_, i) => {
+                    const pageNum = i + 1;
+                    // Show current page and a few around it
+                    if (
+                      pageNum === 1 ||
+                      pageNum === Math.ceil(total / pageSize) ||
+                      (pageNum >= page - 1 && pageNum <= page + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`px-3 py-2 rounded-md transition-colors ${
+                            pageNum === page
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (
+                      (pageNum === 2 && page > 3) ||
+                      (pageNum === Math.ceil(total / pageSize) - 1 &&
+                        page < Math.ceil(total / pageSize) - 2)
+                    ) {
+                      return (
+                        <span key={pageNum} className="px-2 py-2">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                <button
+                  onClick={() =>
+                    setPage(Math.min(Math.ceil(total / pageSize), page + 1))
+                  }
+                  disabled={page === Math.ceil(total / pageSize)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+                <div className="ml-4">
+                  <label className="text-sm font-medium text-gray-700 mr-2">
+                    Items per page:
+                  </label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setPage(1);
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Additional Info Section */}
           {filteredRequests.length > 0 && (
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -423,7 +656,7 @@ const MyRequests = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Total Requests:</span>
-                  <span className="ml-2 text-gray-800">{requests.length}</span>
+                  <span className="ml-2 text-gray-800">{total ?? requests.length}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Active:</span>

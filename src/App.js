@@ -23,6 +23,13 @@ import HomepageNormal from "./Pages/UserPages/HomepageNormal";
 import PermitDetails from "./Pages/UserPages/PermitDetails";
 import SuperUserPage from "./Pages/UserPages/SuperUserPage";
 import MasterData from "./Pages/UserPages/MasterData";
+import CompanyMaster from "./Pages/UserPages/CompanyMaster";
+import UserMaster from "./Pages/UserPages/UserMaster";
+import DepartmentMaster from "./Pages/UserPages/DepartmentMaster";
+import WorkLocationMaster from "./Pages/UserPages/WorkLocationMaster";
+import AlarmPointMaster from "./Pages/UserPages/AlarmPointMaster";
+import DesignationMaster from "./Pages/UserPages/DesignationMaster";
+import LocationMaster from "./Pages/UserPages/LocationMaster";
 
 
 function App() {
@@ -64,7 +71,13 @@ function App() {
             <Route path="/homepagehot" element={<ProtectedRoute><HomepageHot /></ProtectedRoute>} />
             <Route path="/homepageelectric" element={<ProtectedRoute><HomepageElectric /></ProtectedRoute>} />
             <Route path="/homepagenormal" element={<ProtectedRoute><HomepageNormal /></ProtectedRoute>} />
-            
+            <Route path="/super/companymaster" element={<ProtectedRoute><CompanyMaster /></ProtectedRoute>} />
+            <Route path="/super/usermaster" element={<ProtectedRoute><UserMaster /></ProtectedRoute>} />
+            <Route path="/super/departmentmaster" element={<ProtectedRoute><DepartmentMaster /></ProtectedRoute>} />
+            <Route path="/super/worklocationmaster" element={<ProtectedRoute><WorkLocationMaster /></ProtectedRoute>} />
+            <Route path="/super/alarmpointmaster" element={<ProtectedRoute><AlarmPointMaster /></ProtectedRoute>} />
+            <Route path="/super/designationmaster" element={<ProtectedRoute><DesignationMaster /></ProtectedRoute>} />
+            <Route path="/super/locationmaster" element={<ProtectedRoute><LocationMaster /></ProtectedRoute>} />
 
 
           </Route>

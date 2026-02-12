@@ -16,7 +16,7 @@ const PermitDetails = () => {
     const fetchPermitDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://hindterminal56.onrender.com/api/permits/${id}`); // Updated to use `id`
+        const response = await fetch(`http://localhost:4000/api/permits/${id}`); // Updated to use `id`
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

@@ -1,4 +1,4 @@
-// MasterData.jsx - Fully Updated with Designation Selection for Users (Create & Edit)
+// MasterData.jsx - Fully Updated with Designation and Location Selection for Users (Create & Edit)
 
 import React, { useState, useEffect } from "react";
 import {
@@ -18,7 +18,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-const BASE_URL = "https://hindterminal56.onrender.com/api";
+const BASE_URL = "http://localhost:4000/api";
 
 // Toast Component
 const Toast = ({ type, message, onClose }) => {
@@ -53,6 +53,7 @@ const MasterData = () => {
   const [total, setTotal] = useState(0);
   const [roles, setRoles] = useState([]);
   const [designations, setDesignations] = useState([]); // For user designation dropdown
+  const [locations, setLocations] = useState([]); // For location master data
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [toast, setToast] = useState(null);
@@ -77,6 +78,7 @@ const MasterData = () => {
     { id: "work-locations", label: "Work Locations", icon: MapPin },
     { id: "alarm-points", label: "Alarm Points", icon: AlertTriangle },
     { id: "designations", label: "Designations", icon: Briefcase },
+    { id: "locations", label: "Locations", icon: MapPin },
   ];
 
   const endpoints = {
@@ -86,6 +88,7 @@ const MasterData = () => {
     "work-locations": { list: `${BASE_URL}/work-location/list`, add: `${BASE_URL}/work-location/add`, update: `${BASE_URL}/work-location/update`, delete: `${BASE_URL}/work-location/delete` },
     "alarm-points": { list: `${BASE_URL}/alarm-point/list`, add: `${BASE_URL}/alarm-point/add`, update: `${BASE_URL}/alarm-point/update`, delete: `${BASE_URL}/alarm-point/delete` },
     designations: { list: `${BASE_URL}/designation/list`, add: `${BASE_URL}/designation/add`, update: `${BASE_URL}/designation/update`, delete: `${BASE_URL}/designation/delete` },
+    locations: { list: `${BASE_URL}/location-master`, add: `${BASE_URL}/location/add`, update: `${BASE_URL}/location/update`, delete: `${BASE_URL}/location/delete` },
   };
 
   const showToast = (type, message) => {
@@ -103,13 +106,22 @@ const MasterData = () => {
         setLoading(true);
         setError(null);
 
-        const payload = { CompanyId: companyId, UserId: userId, Page: page, PageSize: pageSize };
-
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        let response;
+        if (activeTab === "locations") {
+          // Use GET for locations
+          response = await fetch(endpoint, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+        } else {
+          // Use POST for other tabs
+          const payload = { CompanyId: companyId, UserId: userId, Page: page, PageSize: pageSize };
+          response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }
 
         if (!response.ok) throw new Error("Failed to fetch data");
 
@@ -168,6 +180,26 @@ const MasterData = () => {
     }
   };
 
+  // Fetch locations for location master
+  const fetchLocations = async () => {
+    try {
+      
+      const response = await fetch(endpoints.locations.list, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const result = await response.json();
+      if (result.success) {
+        setLocations(result.data || []);
+      } else {
+        showToast("error", "Failed to load locations");
+      }
+    } catch (err) {
+      console.error("Error fetching locations:", err);
+      showToast("error", "Failed to load locations");
+    }
+  };
+
   const openFormModal = (mode, item = null) => {
     setModalMode(mode);
     setCurrentItem(item);
@@ -176,8 +208,9 @@ const MasterData = () => {
     if (item) {
       setFormData({
         ...item,
-        // Ensure DesignationId is set for edit mode
+        // Ensure DesignationId and LocationId are set for edit mode
         DesignationId: item.DesignationId || "",
+        LocationId: item.LocationId || "",
       });
     } else {
       setFormData({});
@@ -186,6 +219,9 @@ const MasterData = () => {
     if (activeTab === "users") {
       fetchRoles();
       fetchDesignations();
+      fetchLocations(); // Fetch locations for the dropdown
+    } else if (activeTab === "locations") {
+      fetchLocations();
     }
     setShowFormModal(true);
   };
@@ -207,13 +243,17 @@ const MasterData = () => {
       let endpoint = "";
       let payload = { CompanyId: companyId, UserId: userId };
 
-      if (activeTab === "companies") {
+      if (activeTab === "users") {
+        endpoint = modalMode === "create" ? endpoints.users.add : endpoints.users.update;
+        payload = {
+          ...payload,
+          ...formData,
+          LocationId: formData.LocationId, // Pass LocationId when saving user
+        };
+        if (modalMode === "edit") payload.TargetUserId = currentItem?.UserId;
+      } else if (activeTab === "companies") {
         endpoint = endpoints.companies.update;
         payload = { ...payload, ...formData, TargetCompanyId: currentItem?.CompanyId };
-      } else if (activeTab === "users") {
-        endpoint = modalMode === "create" ? endpoints.users.add : endpoints.users.update;
-        payload = { ...payload, ...formData };
-        if (modalMode === "edit") payload.TargetUserId = currentItem?.UserId;
       } else if (activeTab === "departments") {
         endpoint = modalMode === "create" ? endpoints.departments.add : endpoints.departments.update;
         payload.DepartmentName = formData.DepartmentName || "";
@@ -230,6 +270,10 @@ const MasterData = () => {
         endpoint = modalMode === "create" ? endpoints.designations.add : endpoints.designations.update;
         payload.DesignationName = formData.DesignationName || "";
         if (modalMode === "edit") payload.DesignationId = currentItem?.DesignationId;
+      } else if (activeTab === "locations") {
+        endpoint = modalMode === "create" ? endpoints.locations.add : endpoints.locations.update;
+        payload.LocationName = formData.LocationName || "";
+        if (modalMode === "edit") payload.LocationId = currentItem?.LocationId;
       }
 
       const response = await fetch(endpoint, {
@@ -262,6 +306,7 @@ const MasterData = () => {
       else if (activeTab === "work-locations") { endpoint = endpoints["work-locations"].delete; payload.WorkLocationId = item.WorkLocationId; }
       else if (activeTab === "alarm-points") { endpoint = endpoints["alarm-points"].delete; payload.AlarmPointId = item.AlarmPointId; }
       else if (activeTab === "designations") { endpoint = endpoints.designations.delete; payload.DesignationId = item.DesignationId; }
+      else if (activeTab === "locations") { endpoint = endpoints.locations.delete; payload.LocationId = item.LocationId; }
       else return;
 
       const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -292,7 +337,7 @@ const MasterData = () => {
   const getTabLabel = () => tabs.find(t => t.id === activeTab)?.label || "";
 
   const canAdd = activeTab !== "companies";
-  const canDelete = ["users", "departments", "work-locations", "alarm-points", "designations"].includes(activeTab);
+  const canDelete = ["users", "departments", "work-locations", "alarm-points", "designations", "locations"].includes(activeTab);
 
   if (loading) {
     return (
@@ -322,7 +367,7 @@ const MasterData = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Master Data Management</h1>
-            <p className="text-gray-600">Manage users, companies, departments, work locations, alarm points, and designations</p>
+            <p className="text-gray-600">Manage users, companies, departments, work locations, alarm points, designations, and locations</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-lg">
@@ -362,7 +407,9 @@ const MasterData = () => {
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Email</th>
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Role</th>
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Designation</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Location</th> {/* Add Location column */}
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Company</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Created On</th> {/* Add Created On column */}
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Actions</th>
                         </>
                       )}
@@ -375,13 +422,14 @@ const MasterData = () => {
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Actions</th>
                         </>
                       )}
-                      {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations") && (
+                      {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations" || activeTab === "locations") && (
                         <>
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">
                             {activeTab === "departments" ? "Department Name" :
                              activeTab === "work-locations" ? "Work Location Name" :
                              activeTab === "alarm-points" ? "Alarm Point Name" :
-                             "Designation Name"}
+                             activeTab === "designations" ? "Designation Name" :
+                             "Location Name"}
                           </th>
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Created On</th>
                           <th className="border border-gray-300 px-4 py-3 text-left font-medium text-gray-700">Status</th>
@@ -395,7 +443,7 @@ const MasterData = () => {
                       <tr><td colSpan="8" className="border border-gray-300 px-4 py-12 text-center text-gray-500">No records found.</td></tr>
                     ) : (
                       data.map((item) => (
-                        <tr key={item.UserId || item.CompanyId || item.DepartmentId || item.WorkLocationId || item.AlarmPointId || item.DesignationId} className="hover:bg-gray-50">
+                        <tr key={item.UserId || item.CompanyId || item.DepartmentId || item.WorkLocationId || item.AlarmPointId || item.DesignationId || item.LocationId} className="hover:bg-gray-50">
                           {activeTab === "users" && (
                             <>
                               <td className="border border-gray-300 px-4 py-3">{item.Name}</td>
@@ -409,7 +457,9 @@ const MasterData = () => {
                                   {item.DesignationName || "-"}
                                 </span>
                               </td>
+                              <td className="border border-gray-300 px-4 py-3">{item.LocationName || "N/A"}</td> {/* Display LocationName */}
                               <td className="border border-gray-300 px-4 py-3">{item.CompanyName}</td>
+                              <td className="border border-gray-300 px-4 py-3">{formatDate(item.CreatedOn)}</td>
                             </>
                           )}
                           {activeTab === "companies" && (
@@ -424,10 +474,10 @@ const MasterData = () => {
                               </td>
                             </>
                           )}
-                          {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations") && (
+                          {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations" || activeTab === "locations") && (
                             <>
                               <td className="border border-gray-300 px-4 py-3">
-                                {item.DepartmentName || item.WorkLocationName || item.AlarmPointName || item.DesignationName}
+                                {item.DepartmentName || item.WorkLocationName || item.AlarmPointName || item.DesignationName || item.LocationName}
                               </td>
                               <td className="border border-gray-300 px-4 py-3">{formatDate(item.CreatedOn)}</td>
                               <td className="border border-gray-300 px-4 py-3">
@@ -499,18 +549,19 @@ const MasterData = () => {
                   </>
                 )}
 
-                {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations") && (
+                {(activeTab === "departments" || activeTab === "work-locations" || activeTab === "alarm-points" || activeTab === "designations" || activeTab === "locations") && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {activeTab === "departments" ? "Department Name" :
                        activeTab === "work-locations" ? "Work Location Name" :
                        activeTab === "alarm-points" ? "Alarm Point Name" :
-                       "Designation Name"}
+                       activeTab === "designations" ? "Designation Name" :
+                       "Location Name"}
                     </label>
                     <input
                       type="text"
-                      name={activeTab === "departments" ? "DepartmentName" : activeTab === "work-locations" ? "WorkLocationName" : activeTab === "alarm-points" ? "AlarmPointName" : "DesignationName"}
-                      value={formData[activeTab === "departments" ? "DepartmentName" : activeTab === "work-locations" ? "WorkLocationName" : activeTab === "alarm-points" ? "AlarmPointName" : "DesignationName"] || ""}
+                      name={activeTab === "departments" ? "DepartmentName" : activeTab === "work-locations" ? "WorkLocationName" : activeTab === "alarm-points" ? "AlarmPointName" : activeTab === "designations" ? "DesignationName" : "LocationName"}
+                      value={formData[activeTab === "departments" ? "DepartmentName" : activeTab === "work-locations" ? "WorkLocationName" : activeTab === "alarm-points" ? "AlarmPointName" : activeTab === "designations" ? "DesignationName" : "LocationName"] || ""}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
@@ -564,6 +615,25 @@ const MasterData = () => {
                         ))}
                       </select>
                     </div>
+
+                    {/* Location Dropdown - Available in both Create and Edit */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                      <select
+                        name="LocationId"
+                        value={formData.LocationId || ""}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">-- Select Location --</option>
+                        {locations.map((loc) => (
+                          <option key={loc.LocationId} value={loc.LocationId}>
+                            {loc.LocationName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </>
                 )}
               </div>
@@ -592,7 +662,7 @@ const MasterData = () => {
               {currentItem && (
                 <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded mb-4">
                   <strong>
-                    {currentItem.Name || currentItem.CompanyName || currentItem.DepartmentName || currentItem.WorkLocationName || currentItem.AlarmPointName || currentItem.DesignationName || "item"}
+                    {currentItem.Name || currentItem.CompanyName || currentItem.DepartmentName || currentItem.WorkLocationName || currentItem.AlarmPointName || currentItem.DesignationName || currentItem.LocationName || "item"}
                   </strong>
                 </p>
               )}
